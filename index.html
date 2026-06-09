@@ -28,9 +28,9 @@
 
     <div id="login-screen" class="card" style="text-align: center;">
         <h2>تسجيل الدخول للمنصة</h2>
-        <p style="font-size: 13px; color: #888;">(للمدرس كود: TEACHER123 | للطالب: أي كود خاص به مثل st101)</p>
-        <input type="text" id="user-name" placeholder="اكتب اسمك الثنائي">
-        <input type="text" id="user-id" placeholder="اكتب الكود الخاص بك (ID)">
+        <p style="font-size: 13px; color: #888;">(المستر: محمد / 000 | الطالب عمر: عمر / 124)</p>
+        <input type="text" id="user-name" placeholder="اكتب الاسم">
+        <input type="password" id="user-password" placeholder="اكتب كلمة المرور">
         <button onclick="login()">دخول المنصة</button>
     </div>
 
@@ -41,7 +41,7 @@
         <h3>1️⃣ إضافة أسئلة الامتحان الحالي (MCQ)</h3>
         <div style="background: #f1f3f5; padding: 15px; border-radius: 8px;">
             <input type="text" id="q-text" placeholder="اكتب السؤال هنا...">
-            <input type="text" id="opt-1" placeholder="الافتيار الأول (أ)">
+            <input type="text" id="opt-1" placeholder="الاختيار الأول (أ)">
             <input type="text" id="opt-2" placeholder="الاختيار الثاني (ب)">
             <input type="text" id="opt-3" placeholder="الاختيار الثالث (ج)">
             <input type="text" id="opt-4" placeholder="الاختيار الرابع (د)">
@@ -70,7 +70,6 @@
             <thead>
                 <tr>
                     <th>الطالب</th>
-                    <th>الـ ID</th>
                     <th>بدأ الساعة</th>
                     <th>سلم الساعة</th>
                     <th>النتيجة أوتوماتيك</th>
@@ -95,7 +94,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
     <script>
-        // هنا تم ربط سيرفر قاعدة البيانات الخاص بك بنجاح
+        // رابط سيرفر قاعدة البيانات الخاص بك
         const firebaseConfig = { 
             databaseURL: "https://kghk-82a53-default-rtdb.firebaseio.com" 
         };
@@ -103,24 +102,26 @@
         const database = firebase.database();
 
         let currentUser = {};
-        const TEACHER_CODE = "TEACHER123"; // الكود السري الخاص بدخولك كمدرس
         let tempQuestionsArray = []; 
 
         function login() {
             const name = document.getElementById('user-name').value.trim();
-            const id = document.getElementById('user-id').value.trim();
-            if(!name || !id) return alert("برجاء إدخال الاسم والكود أولاً!");
+            const password = document.getElementById('user-password').value.trim();
+            
+            if(!name || !password) return alert("برجاء إدخال الاسم وكلمة المرور أولاً!");
 
-            currentUser = { name, id };
+            currentUser = { name, password };
 
-            if(id === TEACHER_CODE) {
+            // التحقق هل هو المدرس (محمد / 000)
+            if(name === "محمد" && password === "000") {
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('teacher-dashboard').classList.remove('hidden');
                 loadTeacherData();
             } else {
+                // دخول كطالب (عمر أو أي طالب آخر)
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('student-dashboard').classList.remove('hidden');
-                document.getElementById('student-welcome-msg').innerHTML = `<p>مرحباً: <b>${name}</b> (ID: ${id})</p>`;
+                document.getElementById('student-welcome-msg').innerHTML = `<p>مرحباً بالطالب: <b>${name}</b></p>`;
                 checkStudentStatus();
             }
         }
@@ -164,9 +165,13 @@
             });
         }
 
+        // مسح الامتحانات القديمة والنتائج عند الرغبة في بدء امتحان جديد تماماً
         function clearServerExam() {
-            if(confirm("هل أنت متأكد من مسح الامتحان الحالي من السيرفر؟")) {
-                database.ref('myPrivateExam/currentExam').remove().then(() => alert("تم مسح الامتحان بنجاح."));
+            if(confirm("هل أنت متأكد من مسح الامتحان الحالي وجميع إجابات الطلاب للبدء من جديد؟")) {
+                database.ref('myPrivateExam/currentExam').remove();
+                database.ref('myPrivateExam/submissions').remove().then(() => {
+                    alert("تم تنظيف السيرفر بنجاح وجاهز لامتحان جديد.");
+                });
             }
         }
 
@@ -185,14 +190,13 @@
                         let student = data[id];
                         tbody.innerHTML += `<tr>
                             <td><b>${student.name}</b></td>
-                            <td>${id}</td>
                             <td style="color: blue;">${student.startTime || '--'}</td>
                             <td style="color: green;">${student.endTime || 'يمتحن حالياً...'}</td>
                             <td style="font-weight: bold; color: red;">${student.score || 'لم يسلم بعد'}</td>
                         </tr>`;
                     }
                 } else {
-                    tbody.innerHTML = `<tr><td colspan="5">لا توجد نتائج مسجلة حتى الآن.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="4">لا توجد نتائج مسجلة حتى الآن.</td></tr>`;
                 }
             });
         }
@@ -211,7 +215,8 @@
                 }
             });
 
-            database.ref('myPrivateExam/submissions/' + currentUser.id).once('value', (snapshot) => {
+            // نستخدم الاسم كمعرف فرعي لقفل الامتحان عليه
+            database.ref('myPrivateExam/submissions/' + currentUser.name).once('value', (snapshot) => {
                 if(snapshot.exists() && snapshot.val().endTime) {
                     document.getElementById('exam-section').innerHTML = `<h3 style="color: red; text-align:center;">عذراً، لقد أتممت هذا الامتحان مسبقاً!<br> درجتك النهائية هي: ${snapshot.val().score}</h3>`;
                 } else {
@@ -238,7 +243,7 @@
 
         function startExam() {
             const startTime = new Date().toLocaleTimeString('ar-EG');
-            database.ref('myPrivateExam/submissions/' + currentUser.id).update({
+            database.ref('myPrivateExam/submissions/' + currentUser.name).update({
                 name: currentUser.name,
                 startTime: startTime
             });
@@ -282,7 +287,7 @@
             let finalScore = `${correctAnswersCount} من ${totalQuestions}`;
             const endTime = new Date().toLocaleTimeString('ar-EG');
 
-            database.ref('myPrivateExam/submissions/' + currentUser.id).update({
+            database.ref('myPrivateExam/submissions/' + currentUser.name).update({
                 endTime: endTime,
                 score: finalScore
             }).then(() => {
