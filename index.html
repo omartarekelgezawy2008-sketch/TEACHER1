@@ -3,8 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منصة الامتحانات الاحترافية المتطورة</title>
+    <title>منصة الامتحانات الاحترافية المؤمنة ضد الغش</title>
     <style>
+        /* منع تحديد النصوص في الموقع بالكامل لحمايته من النسخ */
+        * {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #eef2f3; margin: 0; padding: 20px; text-align: center; color: #333; }
         .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 8px 16px rgba(0,0,0,0.1); max-width: 650px; margin: 20px auto; border-top: 5px solid #007bff; text-align: right; transition: background 0.3s; }
         h1, h2, h3 { text-align: center; }
@@ -24,18 +31,17 @@
         .tab-btn { width: 48%; display: inline-block; background-color: #6c757d; }
         .tab-active { background-color: #007bff !important; }
         
-        /* تأثير الفلاش التحذيري في منتصف الوقت */
         @keyframes flash-animation {
             0% { background-color: white; }
             50% { background-color: #f8d7da; }
             100% { background-color: white; }
         }
-        .flash-warning { animation: flash-animation 0.5s ease-in-out 6; } /* يعمل فلاش 6 مرات ويتوقف */
+        .flash-warning { animation: flash-animation 0.4s ease-in-out 5; }
     </style>
 </head>
 <body>
 
-    <h1>🚀 نظام الامتحانات الإلكترونية الذكي والمطور</h1>
+    <h1>🚀 نظام الامتحانات الإلكترونية الذكي والمؤمن بالكامل</h1>
 
     <div id="login-screen" class="card" style="text-align: center;">
         <h2>تسجيل الدخول للمنصة</h2>
@@ -145,10 +151,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
     <script>
-        // رابط سيرفر قاعدة البيانات الخاص بك
-        const firebaseConfig = { 
-            databaseURL: "https://kghk-82a53-default-rtdb.firebaseio.com" 
-        };
+        const firebaseConfig = { databaseURL: "https://kghk-82a53-default-rtdb.firebaseio.com" };
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
@@ -157,13 +160,23 @@
         let examTimerInterval = null;
         let totalSecondsLeft = 0;
         let halfTimeSignaled = false;
+        
+        let isExamActive = false; // متغير لمعرفة هل الطالب يؤدي الامتحان حالياً أم لا
+        let cheatAttempts = 0; // عداد محاولات الخروج من الصفحة
+
+        // تفعيل وضع حماية الصفحة (منع الكليك يمين ومنع الأزرار الساخنة للتصوير أو النسخ)
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.addEventListener('keydown', event => {
+            if (event.ctrlKey && (event.key === 'c' || event.key === 'v' || event.key === 'u' || event.key === 'p' || event.key === 's')) {
+                event.preventDefault();
+                alert("🚨 محاولة غير مسموح بها! النسخ والطباعة ممنوع تماماً.");
+            }
+        });
 
         function login() {
             const name = document.getElementById('user-name').value.trim();
             const password = document.getElementById('user-password').value.trim();
-            
             if(!name || !password) return alert("برجاء إدخال الاسم وكلمة المرور أولاً!");
-
             currentUser = { name, password };
 
             if(name === "محمد" && password === "000") {
@@ -178,7 +191,7 @@
             }
         }
 
-        // ---------- وظائف التبديل في لوحة المستر ----------
+        // ---------- وظائف المستر ----------
         function switchTeacherTab(type) {
             if(type === 'mcq') {
                 document.getElementById('section-add-mcq').classList.remove('hidden');
@@ -194,17 +207,13 @@
         }
 
         function toggleCorrectAnswersSelect() {
-            // تنظيف الاختيارات عند تغيير الوضع لتفادي الأخطاء
             const checkboxes = document.querySelectorAll('.mcq-correct-chk');
             checkboxes.forEach(cb => cb.checked = false);
         }
 
-        // حفظ سؤال MCQ في القائمة المؤقتة
         function addMcqQuestion() {
             const qText = document.getElementById('mcq-q-text').value.trim();
             if(!qText) return alert("يرجى كتابة رأس السؤال!");
-
-            // جمع الاختيارات غير الفارغة
             let options = [];
             for(let i=1; i<=6; i++) {
                 let val = document.getElementById(`mcq-opt-${i}`).value.trim();
@@ -212,58 +221,33 @@
             }
             if(options.length < 2) return alert("يجب كتابة اختيارين على الأقل للسؤال!");
 
-            // جمع الإجابات الصحيحة المحددة
             let correctAnswers = [];
             const checkboxes = document.querySelectorAll('.mcq-correct-chk');
             checkboxes.forEach(cb => {
                 if(cb.checked) {
                     let idx = parseInt(cb.value);
-                    if(idx < options.length) { // نضمن إنه مأختارش خانة فاضية كإجابة صحيحة
-                        correctAnswers.push(idx);
-                    }
+                    if(idx < options.length) correctAnswers.push(idx);
                 }
             });
 
-            if(correctAnswers.length === 0) return alert("يجب تحديد إجابة واحدة صحيحة على الأقل من مربعات الاختيار في الأسفل!");
-            
+            if(correctAnswers.length === 0) return alert("يجب تحديد إجابة واحدة صحيحة على الأقل!");
             const mode = document.getElementById('mcq-mode').value;
-            if(mode === 'single' && correctAnswers.length > 1) {
-                return alert("أنت اخترت وضع (إجابة واحدة صحيحة) ولكنك علمت على أكثر من إجابة صحيحة بالأسفل! يرجى تصحيح ذلك.");
-            }
+            if(mode === 'single' && correctAnswers.length > 1) return alert("اخترت إجابة واحدة وعلّمت على أكثر من اختيار!");
 
-            // إضافة السؤال للمصفوفة
-            tempQuestionsArray.push({
-                type: 'mcq',
-                question: qText,
-                options: options,
-                correctAnswers: correctAnswers,
-                mode: mode // single أو multiple
-            });
-
+            tempQuestionsArray.push({ type: 'mcq', question: qText, options: options, correctAnswers: correctAnswers, mode: mode });
             updateQuestionsCountText();
-            
-            // تصفير الحقول لسؤال جديد
             document.getElementById('mcq-q-text').value = "";
             for(let i=1; i<=6; i++) document.getElementById(`mcq-opt-${i}`).value = "";
             checkboxes.forEach(cb => cb.checked = false);
-            alert("تم حفظ سؤال الـ MCQ في القائمة المجهزة بنجاح!");
+            alert("تم حفظ سؤال الـ MCQ بنجاح!");
         }
 
-        // حفظ سؤال صح وغلط في القائمة المؤقتة
         function addTrueFalseQuestion() {
             const qText = document.getElementById('tf-q-text').value.trim();
             if(!qText) return alert("يرجى كتابة سؤال الصح والغلط!");
+            const ans = document.getElementById('tf-correct').value === "true" ? 1 : 0;
 
-            const ans = document.getElementById('tf-correct').value === "true" ? 1 : 0; // 1 يعني صح، 0 يعني غلط
-
-            tempQuestionsArray.push({
-                type: 'tf',
-                question: qText,
-                options: ["غلط ❌", "صح ✔️"],
-                correctAnswers: [ans],
-                mode: 'single'
-            });
-
+            tempQuestionsArray.push({ type: 'tf', question: qText, options: ["غلط ❌", "صح ✔️"], correctAnswers: [ans], mode: 'single' });
             updateQuestionsCountText();
             document.getElementById('tf-q-text').value = "";
             alert("تم حفظ سؤال صح/غلط بنجاح!");
@@ -276,23 +260,17 @@
         function publishExamToServer() {
             if(tempQuestionsArray.length === 0) return alert("لا توجد أسئلة مجهزة لنشرها!");
             const duration = parseInt(document.getElementById('exam-duration-input').value) || 10;
-            
-            database.ref('myPrivateExam/currentExam').set({
-                questions: tempQuestionsArray,
-                duration: duration
-            }).then(() => {
-                alert("تم نشر الامتحان المتطور بالكامل على سيرفرك الخاص بنجاح وبدأ الآن للطلبة!");
+            database.ref('myPrivateExam/currentExam').set({ questions: tempQuestionsArray, duration: duration }).then(() => {
+                alert("تم نشر الامتحان وتأمينه بنجاح وهو متاح للطلبة الآن!");
                 tempQuestionsArray = [];
                 updateQuestionsCountText();
             });
         }
 
         function clearServerExam() {
-            if(confirm("هل أنت متأكد من مسح الامتحان الحالي وجميع إجابات الطلاب للبدء من جديد؟")) {
+            if(confirm("هل أنت متأكد من مسح الامتحان والنتائج؟")) {
                 database.ref('myPrivateExam/currentExam').remove();
-                database.ref('myPrivateExam/submissions').remove().then(() => {
-                    alert("تم تنظيف السيرفر بنجاح وجاهز لامتحان جديد.");
-                });
+                database.ref('myPrivateExam/submissions').remove().then(() => alert("تم تنظيف السيرفر بنجاح."));
             }
         }
 
@@ -322,7 +300,7 @@
             });
         }
 
-        // ---------- وظائف الطالب ----------
+        // ---------- وظائف الطالب وتأمين الغش ----------
         let serverQuestions = []; 
         let examDurationMinutes = 10;
 
@@ -339,7 +317,7 @@
 
             database.ref('myPrivateExam/submissions/' + currentUser.name).once('value', (snapshot) => {
                 if(snapshot.exists() && snapshot.val().endTime) {
-                    document.getElementById('exam-section').innerHTML = `<h3 style="color: red; text-align:center;">عذراً، لقد أتممت هذا الامتحان مسبقاً!<br> درجتك النهائية هي: ${snapshot.val().score}</h3>`;
+                    document.getElementById('exam-section').innerHTML = `<h3 style="color: red; text-align:center;">عذراً، لقد أتممت هذا الامتحان مسبقاً أو تم إلغاؤه بسبب الغش!<br> درجتك النهائية هي: ${snapshot.val().score}</h3>`;
                 } else {
                     watchActiveExam();
                 }
@@ -353,8 +331,8 @@
                     serverQuestions = snapshot.val().questions;
                     examDurationMinutes = snapshot.val().duration || 10;
                     examSection.innerHTML = `
-                        <h3 style="color: #385723; text-align:center;">📋 يوجد امتحان جديد متاح الآن</h3>
-                        <p style="text-align:center; color:#666;">عدد الأسئلة: ${serverQuestions.length} | مدة الامتحان: ${examDurationMinutes} دقائق</p>
+                        <h3 style="color: #385723; text-align:center;">📋 يوجد امتحان جديد متاح الآن ومؤمن ضد الغش</h3>
+                        <p style="text-align:center; color:red; font-weight:bold;">⚠️ تنبيه: الخروج من الصفحة أو محاولة أخذ لقطة شاشة سيلغي امتحانك فوراً!</p>
                         <button onclick="startExam()" style="background-color: #28a745;">اضغط هنا لبدء الامتحان والوقت فوراً</button>
                     `;
                 } else {
@@ -365,123 +343,128 @@
 
         function startExam() {
             const startTime = new Date().toLocaleTimeString('ar-EG');
-            database.ref('myPrivateExam/submissions/' + currentUser.name).update({
-                name: currentUser.name,
-                startTime: startTime
-            });
+            database.ref('myPrivateExam/submissions/' + currentUser.name).update({ name: currentUser.name, startTime: startTime });
 
-            // تشغيل العداد التنازلي
             document.getElementById('timer-container').style.display = "block";
             totalSecondsLeft = examDurationMinutes * 60;
             halfTimeSignaled = false;
+            cheatAttempts = 0;
+            isExamActive = true; // تم تفعيل كاشف الغش
+            
             runTimer();
-
             renderQuestions();
         }
 
+        // 🚨 نظام كشف الخروج من الصفحة (الانتقال لتبويب آخر أو تطبيق آخر)
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden' && isExamActive) {
+                cheatAttempts++;
+                document.getElementById('student-dashboard').classList.add('flash-warning');
+                
+                if (cheatAttempts === 1) {
+                    alert("⚠️ تحذير غش صريح (المرة الأولى)! غير مسموح بالخروج من الصفحة. عُد للامتحان فوراً!");
+                } else if (cheatAttempts === 2) {
+                    alert("⚠️ تحذير نهائي (المرة الثانية)! إذا خرجت مرة أخرى سيتم سحب الورقة وإلغاء الامتحان!");
+                } else if (cheatAttempts >= 3) {
+                    isExamActive = false;
+                    if(examTimerInterval) clearInterval(examTimerInterval);
+                    document.getElementById('timer-container').style.display = "none";
+                    
+                    alert("🚨 تم سحب الامتحان! لقد تجاوزت الحد المسموح به لمحاولات الغش والخروج من الصفحة.");
+                    submitExamDueToCheating(); // سحب فوري للورقة
+                }
+                
+                setTimeout(() => {
+                    document.getElementById('student-dashboard').classList.remove('flash-warning');
+                }, 3000);
+            }
+        });
+
         function runTimer() {
             const totalDurationSeconds = examDurationMinutes * 60;
-            
             examTimerInterval = setInterval(() => {
                 if(totalSecondsLeft <= 0) {
                     clearInterval(examTimerInterval);
-                    alert("⏰ انتهى الوقت المحدود للامتحان! سيتم تسليم إجاباتك الحالية تلقائياً.");
-                    calculateAndSubmit(); // تسليم تلقائي عند انتهاء الوقت
+                    isExamActive = false;
+                    alert("⏰ انتهى الوقت المخصص للامتحان! سيتم سحب الورقة وتصحيحها تلقائياً.");
+                    calculateAndSubmit();
                     return;
                 }
-
                 totalSecondsLeft--;
-
-                // حساب الدقائق والثواني للعرض
                 let mins = Math.floor(totalSecondsLeft / 60);
                 let secs = totalSecondsLeft % 60;
-                document.getElementById('countdown-timer').innerText = 
-                    `${mins < 10 ? '0'+mins : mins}:${secs < 10 ? '0'+secs : secs}`;
+                document.getElementById('countdown-timer').innerText = `${mins < 10 ? '0'+mins : mins}:${secs < 10 ? '0'+secs : secs}`;
 
-                // 🚨 فلاش تحذيري وتنبيه عند منتصف الوقت بالضبط
                 if(!halfTimeSignaled && totalSecondsLeft <= (totalDurationSeconds / 2)) {
                     halfTimeSignaled = true;
-                    // تفعيل تأثير الفلاش على خلفية الكارت أو الـ body
                     document.getElementById('student-dashboard').classList.add('flash-warning');
-                    alert("⚠️ تحذير: لقد انقضى نصف وقت الامتحان المخصص! يرجى الإسراع في الحل.");
-                    setTimeout(() => {
-                        document.getElementById('student-dashboard').classList.remove('flash-warning');
-                    }, 4000);
+                    alert("⚠️ انتبه: لقد انقضى نصف وقت الامتحان المخصص!");
+                    setTimeout(() => document.getElementById('student-dashboard').classList.remove('flash-warning'), 3000);
                 }
-
             }, 1000);
         }
 
         function renderQuestions() {
             const examSection = document.getElementById('exam-section');
-            let html = `<h3 style="color: red; text-align:center;">⚠️ أجب عن الأسئلة التالية قبل انتهاء الوقت:</h3>`;
-            
+            let html = `<h3 style="color: red; text-align:center;">📋 أجب بتركيز:</h3>`;
             serverQuestions.forEach((q, qIndex) => {
                 html += `<div class="question-block" data-type="${q.type}">
-                    <p><b>س ${qIndex + 1}: ${q.question}</b> 
-                    <span style="font-size:12px; color:#666;">(${q.mode === 'multiple' ? 'تنبيه: اختر كل الإجابات الصحيحة، السؤال يحتوي على أكثر من إجابة صح' : 'اختر إجابة واحدة فقط'})</span></p>
+                    <p><b>س ${qIndex + 1}: ${q.question}</b> <span style="font-size:11px; color:#666;">(${q.mode === 'multiple' ? 'أكثر من إجابة صحيحة' : 'إجابة واحدة فقط'})</span></p>
                     <div class="${q.mode === 'multiple' ? 'checkbox-group' : 'radio-group'}">`;
-                
-                // عرض الخيارات المتاحة للسؤال
                 q.options.forEach((opt, oIndex) => {
                     if(q.mode === 'multiple') {
-                        // نظام المربعات لأكثر من إجابة صحيحة
                         html += `<label><input type="checkbox" name="question-${qIndex}" value="${oIndex}"> ${opt}</label>`;
                     } else {
-                        // نظام الدوائر لإجابة واحدة صحيحة
                         html += `<label><input type="radio" name="question-${qIndex}" value="${oIndex}"> ${opt}</label>`;
                     }
                 });
-
                 html += `</div></div>`;
             });
-
-            html += `<button onclick="calculateAndSubmit()" style="background-color: #dc3545; margin-top:20px;">إنهاء وتصحيح الامتحان وتسليم الدرجة</button>`;
+            html += `<button onclick="calculateAndSubmit()" style="background-color: #dc3545; margin-top:20px;">إنهاء وتسليم الامتحان</button>`;
             examSection.innerHTML = html;
         }
 
         function calculateAndSubmit() {
-            // إيقاف العداد التنازلي فوراً لمنع التكرار
             if(examTimerInterval) clearInterval(examTimerInterval);
             document.getElementById('timer-container').style.display = "none";
+            isExamActive = false;
 
             let totalQuestions = serverQuestions.length;
             let correctAnswersCount = 0;
 
             serverQuestions.forEach((q, qIndex) => {
-                // إيجاد العناصر المختارة لهذا السؤال
                 const selectedElements = document.querySelectorAll(`input[name="question-${qIndex}"]:checked`);
                 let userAnswers = [];
                 selectedElements.forEach(el => userAnswers.push(parseInt(el.value)));
 
-                // مقارنة إجابات الطالب بالإجابات الصحيحة المسجلة في السيرفر
                 let isCorrect = false;
-                
                 if(userAnswers.length > 0) {
-                    // فرز وترتيب المصفوفات لضمان دقة المقارنة
                     let correctArr = q.correctAnswers.sort((a,b)=>a-b);
                     let userArr = userAnswers.sort((a,b)=>a-b);
-                    
-                    // يجب أن يتطابق الطول والقيم بالظبط
                     if(correctArr.length === userArr.length && correctArr.every((val, index) => val === userArr[index])) {
                         isCorrect = true;
                     }
                 }
-
-                if(isCorrect) {
-                    correctAnswersCount++;
-                }
+                if(isCorrect) correctAnswersCount++;
             });
 
             let finalScore = `${correctAnswersCount} من ${totalQuestions}`;
             const endTime = new Date().toLocaleTimeString('ar-EG');
 
-            database.ref('myPrivateExam/submissions/' + currentUser.name).update({
-                endTime: endTime,
-                score: finalScore
-            }).then(() => {
-                alert(`تم حفظ وتصحيح امتحانك بنجاح على السيرفر! نتيجتك النهائية هي: ${finalScore}`);
-                checkStudentStatus(); // لقفل الشاشة ومنع إعادة الحل
+            database.ref('myPrivateExam/submissions/' + currentUser.name).update({ endTime: endTime, score: finalScore }).then(() => {
+                alert(`تم حفظ وتصحيح امتحانك بنجاح! النتيجة: ${finalScore}`);
+                checkStudentStatus();
+            });
+        }
+
+        // دالة السحب الفوري والإلغاء عند الغش المتكرر والخروج 3 مرات
+        function submitExamDueToCheating() {
+            isExamActive = false;
+            let finalScore = "❌ ملغي (بسبب محاولة الغش)";
+            const endTime = new Date().toLocaleTimeString('ar-EG');
+
+            database.ref('myPrivateExam/submissions/' + currentUser.name).update({ endTime: endTime, score: finalScore }).then(() => {
+                checkStudentStatus();
             });
         }
     </script>
