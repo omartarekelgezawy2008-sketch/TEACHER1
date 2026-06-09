@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منصة الامتحانات الذكية - MCQ</title>
+    <title>منصة الامتحانات الاحترافية المتطورة</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #eef2f3; margin: 0; padding: 20px; text-align: center; color: #333; }
-        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 8px 16px rgba(0,0,0,0.1); max-width: 600px; margin: 20px auto; border-top: 5px solid #007bff; text-align: right; }
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 8px 16px rgba(0,0,0,0.1); max-width: 650px; margin: 20px auto; border-top: 5px solid #007bff; text-align: right; transition: background 0.3s; }
         h1, h2, h3 { text-align: center; }
         input, button, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; box-sizing: border-box; }
         button { background-color: #007bff; color: white; cursor: pointer; border: none; font-weight: bold; transition: 0.3s; }
@@ -17,14 +17,25 @@
         th { background-color: #007bff; color: white; }
         .announcement { background: #fff3cd; color: #856404; padding: 15px; border-radius: 6px; border-right: 5px solid #ffc107; margin-bottom: 20px; font-weight: bold; }
         .question-block { background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #dee2e6; }
-        .radio-group { margin: 10px 0; }
-        .radio-group label { display: block; background: white; padding: 10px; margin: 5px 0; border-radius: 5px; border: 1px solid #ddd; cursor: pointer; }
-        .radio-group input { width: auto; margin-left: 10px; }
+        .checkbox-group, .radio-group { margin: 10px 0; }
+        .checkbox-group label, .radio-group label { display: block; background: white; padding: 10px; margin: 5px 0; border-radius: 5px; border: 1px solid #ddd; cursor: pointer; }
+        .checkbox-group input, .radio-group input { width: auto; margin-left: 10px; }
+        .timer-box { font-size: 22px; font-weight: bold; color: #dc3545; background: #f8d7da; padding: 10px; border-radius: 6px; border: 1px solid #f5c6cb; position: sticky; top: 10px; z-index: 1000; display: inline-block; margin-bottom: 15px; }
+        .tab-btn { width: 48%; display: inline-block; background-color: #6c757d; }
+        .tab-active { background-color: #007bff !important; }
+        
+        /* تأثير الفلاش التحذيري في منتصف الوقت */
+        @keyframes flash-animation {
+            0% { background-color: white; }
+            50% { background-color: #f8d7da; }
+            100% { background-color: white; }
+        }
+        .flash-warning { animation: flash-animation 0.5s ease-in-out 6; } /* يعمل فلاش 6 مرات ويتوقف */
     </style>
 </head>
 <body>
 
-    <h1>🚀 نظام الامتحانات الإلكترونية الذكي (MCQ)</h1>
+    <h1>🚀 نظام الامتحانات الإلكترونية الذكي والمطور</h1>
 
     <div id="login-screen" class="card" style="text-align: center;">
         <h2>تسجيل الدخول للمنصة</h2>
@@ -38,26 +49,62 @@
         <h2 style="color: #007bff;">لوحة تحكم المستر 👋</h2>
         <hr>
         
-        <h3>1️⃣ إضافة أسئلة الامتحان الحالي (MCQ)</h3>
-        <div style="background: #f1f3f5; padding: 15px; border-radius: 8px;">
-            <input type="text" id="q-text" placeholder="اكتب السؤال هنا...">
-            <input type="text" id="opt-1" placeholder="الاختيار الأول (أ)">
-            <input type="text" id="opt-2" placeholder="الاختيار الثاني (ب)">
-            <input type="text" id="opt-3" placeholder="الاختيار الثالث (ج)">
-            <input type="text" id="opt-4" placeholder="الاختيار الرابع (د)">
-            <label>حدد الإجابة الصحيحة:</label>
-            <select id="correct-opt">
-                <option value="1">الاختيار الأول (أ)</option>
-                <option value="2">الاختيار الثاني (ب)</option>
-                <option value="3">الاختيار الثالث (ج)</option>
-                <option value="4">الاختيار الرابع (د)</option>
+        <div style="background: #e2e3e5; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+            <label><b>⏱️ حدد وقت هذا الامتحان بالكامل (بالدقائق):</b></label>
+            <input type="number" id="exam-duration-input" value="10" min="1" style="width: 100px; text-align: center;"> دقائق
+        </div>
+
+        <div style="text-align: center; margin-bottom: 15px;">
+            <button id="btn-tab-mcq" class="tab-btn tab-active" onclick="switchTeacherTab('mcq')">أسئلة الاختيار من متعدد (MCQ)</button>
+            <button id="btn-tab-tf" class="tab-btn" onclick="switchTeacherTab('tf')">أسئلة صح وغلط</button>
+        </div>
+
+        <div id="section-add-mcq" style="background: #f1f3f5; padding: 15px; border-radius: 8px;">
+            <h3>➕ إضافة سؤال اختيار من متعدد (MCQ)</h3>
+            <input type="text" id="mcq-q-text" placeholder="اكتب رأس السؤال هنا...">
+            
+            <p style="font-size: 13px; color: #555; margin: 2px 0;">* اكتب الاختيارات (يمكنك ملء من 2 إلى 6 اختيارات حسب رغبتك):</p>
+            <input type="text" id="mcq-opt-1" placeholder="الاختيار الأول (أ)">
+            <input type="text" id="mcq-opt-2" placeholder="الاختيار الثاني (ب)">
+            <input type="text" id="mcq-opt-3" placeholder="الاختيار الثالث (ج)">
+            <input type="text" id="mcq-opt-4" placeholder="الاختيار الرابع (د)">
+            <input type="text" id="mcq-opt-5" placeholder="الاختيار الخامس (هـ) - اختياري">
+            <input type="text" id="mcq-opt-6" placeholder="الاختيار السادس (و) - اختياري">
+            
+            <label><b>⚙️ نظام الإجابة الصحيحة للطالب:</b></label>
+            <select id="mcq-mode" onchange="toggleCorrectAnswersSelect()">
+                <option value="single">إجابة واحدة صحيحة فقط (Radio)</option>
+                <option value="multiple">أكثر من إجابة صحيحة (Checkboxes)</option>
             </select>
-            <button onclick="addQuestionToTemplate()" style="background-color: #28a745;">➕ أضف هذا السؤال للامتحان</button>
+
+            <div id="correct-answers-box" style="margin-top: 10px; background: #e8f4fd; padding: 10px; border-radius: 5px;">
+                <p style="margin: 0 0 5px 0; font-weight: bold;">حدد الإجابة/الإجابات الصحيحة من هنا:</p>
+                <label><input type="checkbox" class="mcq-correct-chk" value="0"> الأول (أ)</label>
+                <label><input type="checkbox" class="mcq-correct-chk" value="1"> الثاني (ب)</label>
+                <label><input type="checkbox" class="mcq-correct-chk" value="2"> الثالث (ج)</label>
+                <label><input type="checkbox" class="mcq-correct-chk" value="3"> الرابع (د)</label>
+                <label><input type="checkbox" class="mcq-correct-chk" value="4"> الخامس (هـ)</label>
+                <label><input type="checkbox" class="mcq-correct-chk" value="5"> السادس (و)</label>
+            </div>
+
+            <button onclick="addMcqQuestion()" style="background-color: #28a745; margin-top: 15px;">➕ حفظ سؤال الـ MCQ</button>
+        </div>
+
+        <div id="section-add-tf" class="hidden" style="background: #fff3cd; padding: 15px; border-radius: 8px;">
+            <h3>➕ إضافة سؤال صح أو غلط</h3>
+            <input type="text" id="tf-q-text" placeholder="اكتب سؤال الصح والغلط هنا...">
+            
+            <label><b>الإجابة الصحيحة لهذا السؤال:</b></label>
+            <select id="tf-correct">
+                <option value="true">صح ✔️</option>
+                <option value="false">غلط ❌</option>
+            </select>
+            <button onclick="addTrueFalseQuestion()" style="background-color: #28a745; margin-top: 15px;">➕ حفظ سؤال صح/غلط</button>
         </div>
         
-        <p id="questions-count" style="font-weight: bold; color: green; text-align: center;">الأسئلة المجهزة حتى الآن: 0 أسئلة</p>
+        <p id="questions-count" style="font-weight: bold; color: green; text-align: center; margin-top: 15px;">الأسئلة المجهزة في هذا الامتحان حتى الآن: 0 أسئلة</p>
         <button onclick="publishExamToServer()" style="background-color: #ffc107; color: black;">📢 نشر الامتحان بالكامل للطلبة الآن</button>
-        <button onclick="clearServerExam()" style="background-color: #dc3545;">🗑️ مسح الامتحان الحالي من السيرفر</button>
+        <button onclick="clearServerExam()" style="background-color: #dc3545;">🗑️ مسح الامتحان والنتائج الحالية من السيرفر للبدء من جديد</button>
 
         <hr>
         <h3>2️⃣ نشر تعليمات عاجلة للطلبة</h3>
@@ -85,6 +132,10 @@
         
         <div id="announcement-box" class="announcement" style="display: none;"></div>
         
+        <div id="timer-container" style="text-align: center; display: none;">
+            <div class="timer-box">⏱️ الوقت المتبقي: <span id="countdown-timer">00:00</span></div>
+        </div>
+
         <div id="exam-section">
             <p style="text-align: center;">جاري فحص السيرفر لوجود امتحانات...</p>
         </div>
@@ -103,6 +154,9 @@
 
         let currentUser = {};
         let tempQuestionsArray = []; 
+        let examTimerInterval = null;
+        let totalSecondsLeft = 0;
+        let halfTimeSignaled = false;
 
         function login() {
             const name = document.getElementById('user-name').value.trim();
@@ -112,13 +166,11 @@
 
             currentUser = { name, password };
 
-            // التحقق هل هو المدرس (محمد / 000)
             if(name === "محمد" && password === "000") {
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('teacher-dashboard').classList.remove('hidden');
                 loadTeacherData();
             } else {
-                // دخول كطالب (عمر أو أي طالب آخر)
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('student-dashboard').classList.remove('hidden');
                 document.getElementById('student-welcome-msg').innerHTML = `<p>مرحباً بالطالب: <b>${name}</b></p>`;
@@ -126,46 +178,115 @@
             }
         }
 
-        // ---------- وظائف المستر ----------
-        function addQuestionToTemplate() {
-            const qText = document.getElementById('q-text').value;
-            const o1 = document.getElementById('opt-1').value;
-            const o2 = document.getElementById('opt-2').value;
-            const o3 = document.getElementById('opt-3').value;
-            const o4 = document.getElementById('opt-4').value;
-            const correct = document.getElementById('correct-opt').value;
+        // ---------- وظائف التبديل في لوحة المستر ----------
+        function switchTeacherTab(type) {
+            if(type === 'mcq') {
+                document.getElementById('section-add-mcq').classList.remove('hidden');
+                document.getElementById('section-add-tf').classList.add('hidden');
+                document.getElementById('btn-tab-mcq').classList.add('tab-active');
+                document.getElementById('btn-tab-tf').classList.remove('tab-active');
+            } else {
+                document.getElementById('section-add-mcq').classList.add('hidden');
+                document.getElementById('section-add-tf').classList.remove('hidden');
+                document.getElementById('btn-tab-mcq').classList.remove('tab-active');
+                document.getElementById('btn-tab-tf').classList.add('tab-active');
+            }
+        }
 
-            if(!qText || !o1 || !o2 || !o3 || !o4) return alert("برجاء ملء السؤال وجميع الاختيارات الأربعة!");
+        function toggleCorrectAnswersSelect() {
+            // تنظيف الاختيارات عند تغيير الوضع لتفادي الأخطاء
+            const checkboxes = document.querySelectorAll('.mcq-correct-chk');
+            checkboxes.forEach(cb => cb.checked = false);
+        }
 
-            tempQuestionsArray.push({
-                question: qText,
-                options: [o1, o2, o3, o4],
-                correctAnswer: parseInt(correct) - 1 
+        // حفظ سؤال MCQ في القائمة المؤقتة
+        function addMcqQuestion() {
+            const qText = document.getElementById('mcq-q-text').value.trim();
+            if(!qText) return alert("يرجى كتابة رأس السؤال!");
+
+            // جمع الاختيارات غير الفارغة
+            let options = [];
+            for(let i=1; i<=6; i++) {
+                let val = document.getElementById(`mcq-opt-${i}`).value.trim();
+                if(val) options.push(val);
+            }
+            if(options.length < 2) return alert("يجب كتابة اختيارين على الأقل للسؤال!");
+
+            // جمع الإجابات الصحيحة المحددة
+            let correctAnswers = [];
+            const checkboxes = document.querySelectorAll('.mcq-correct-chk');
+            checkboxes.forEach(cb => {
+                if(cb.checked) {
+                    let idx = parseInt(cb.value);
+                    if(idx < options.length) { // نضمن إنه مأختارش خانة فاضية كإجابة صحيحة
+                        correctAnswers.push(idx);
+                    }
+                }
             });
 
-            document.getElementById('questions-count').innerText = `الأسئلة المجهزة حتى الآن: ${tempQuestionsArray.length} أسئلة`;
+            if(correctAnswers.length === 0) return alert("يجب تحديد إجابة واحدة صحيحة على الأقل من مربعات الاختيار في الأسفل!");
             
-            document.getElementById('q-text').value = "";
-            document.getElementById('opt-1').value = "";
-            document.getElementById('opt-2').value = "";
-            document.getElementById('opt-3').value = "";
-            document.getElementById('opt-4').value = "";
-            alert("تم حفظ السؤال في القائمة المجهزة. يمكنك إضافة المزيد أو نشر الامتحان.");
+            const mode = document.getElementById('mcq-mode').value;
+            if(mode === 'single' && correctAnswers.length > 1) {
+                return alert("أنت اخترت وضع (إجابة واحدة صحيحة) ولكنك علمت على أكثر من إجابة صحيحة بالأسفل! يرجى تصحيح ذلك.");
+            }
+
+            // إضافة السؤال للمصفوفة
+            tempQuestionsArray.push({
+                type: 'mcq',
+                question: qText,
+                options: options,
+                correctAnswers: correctAnswers,
+                mode: mode // single أو multiple
+            });
+
+            updateQuestionsCountText();
+            
+            // تصفير الحقول لسؤال جديد
+            document.getElementById('mcq-q-text').value = "";
+            for(let i=1; i<=6; i++) document.getElementById(`mcq-opt-${i}`).value = "";
+            checkboxes.forEach(cb => cb.checked = false);
+            alert("تم حفظ سؤال الـ MCQ في القائمة المجهزة بنجاح!");
+        }
+
+        // حفظ سؤال صح وغلط في القائمة المؤقتة
+        function addTrueFalseQuestion() {
+            const qText = document.getElementById('tf-q-text').value.trim();
+            if(!qText) return alert("يرجى كتابة سؤال الصح والغلط!");
+
+            const ans = document.getElementById('tf-correct').value === "true" ? 1 : 0; // 1 يعني صح، 0 يعني غلط
+
+            tempQuestionsArray.push({
+                type: 'tf',
+                question: qText,
+                options: ["غلط ❌", "صح ✔️"],
+                correctAnswers: [ans],
+                mode: 'single'
+            });
+
+            updateQuestionsCountText();
+            document.getElementById('tf-q-text').value = "";
+            alert("تم حفظ سؤال صح/غلط بنجاح!");
+        }
+
+        function updateQuestionsCountText() {
+            document.getElementById('questions-count').innerText = `الأسئلة المجهزة في هذا الامتحان حتى الآن: ${tempQuestionsArray.length} أسئلة`;
         }
 
         function publishExamToServer() {
             if(tempQuestionsArray.length === 0) return alert("لا توجد أسئلة مجهزة لنشرها!");
+            const duration = parseInt(document.getElementById('exam-duration-input').value) || 10;
             
             database.ref('myPrivateExam/currentExam').set({
-                questions: tempQuestionsArray
+                questions: tempQuestionsArray,
+                duration: duration
             }).then(() => {
-                alert("تم نشر امتحان الـ MCQ بنجاح على سيرفرك الخاص!");
+                alert("تم نشر الامتحان المتطور بالكامل على سيرفرك الخاص بنجاح وبدأ الآن للطلبة!");
                 tempQuestionsArray = [];
-                document.getElementById('questions-count').innerText = `الأسئلة المجهزة حتى الآن: 0 أسئلة`;
+                updateQuestionsCountText();
             });
         }
 
-        // مسح الامتحانات القديمة والنتائج عند الرغبة في بدء امتحان جديد تماماً
         function clearServerExam() {
             if(confirm("هل أنت متأكد من مسح الامتحان الحالي وجميع إجابات الطلاب للبدء من جديد؟")) {
                 database.ref('myPrivateExam/currentExam').remove();
@@ -203,6 +324,7 @@
 
         // ---------- وظائف الطالب ----------
         let serverQuestions = []; 
+        let examDurationMinutes = 10;
 
         function checkStudentStatus() {
             database.ref('myPrivateExam/announcement').on('value', (snapshot) => {
@@ -215,7 +337,6 @@
                 }
             });
 
-            // نستخدم الاسم كمعرف فرعي لقفل الامتحان عليه
             database.ref('myPrivateExam/submissions/' + currentUser.name).once('value', (snapshot) => {
                 if(snapshot.exists() && snapshot.val().endTime) {
                     document.getElementById('exam-section').innerHTML = `<h3 style="color: red; text-align:center;">عذراً، لقد أتممت هذا الامتحان مسبقاً!<br> درجتك النهائية هي: ${snapshot.val().score}</h3>`;
@@ -230,10 +351,11 @@
                 const examSection = document.getElementById('exam-section');
                 if(snapshot.exists()) {
                     serverQuestions = snapshot.val().questions;
+                    examDurationMinutes = snapshot.val().duration || 10;
                     examSection.innerHTML = `
-                        <h3 style="color: #385723; text-align:center;">📋 يوجد امتحان MCQ متاح الآن</h3>
-                        <p style="text-align:center; color:#666;">عدد الأسئلة: ${serverQuestions.length}</p>
-                        <button onclick="startExam()" style="background-color: #28a745;">اضغط هنا لبدء الامتحان فوراً</button>
+                        <h3 style="color: #385723; text-align:center;">📋 يوجد امتحان جديد متاح الآن</h3>
+                        <p style="text-align:center; color:#666;">عدد الأسئلة: ${serverQuestions.length} | مدة الامتحان: ${examDurationMinutes} دقائق</p>
+                        <button onclick="startExam()" style="background-color: #28a745;">اضغط هنا لبدء الامتحان والوقت فوراً</button>
                     `;
                 } else {
                     examSection.innerHTML = `<h3 style="text-align:center;">لا توجد امتحانات مرفوعة حالياً. ☕</h3>`;
@@ -248,39 +370,106 @@
                 startTime: startTime
             });
 
+            // تشغيل العداد التنازلي
+            document.getElementById('timer-container').style.display = "block";
+            totalSecondsLeft = examDurationMinutes * 60;
+            halfTimeSignaled = false;
+            runTimer();
+
             renderQuestions();
+        }
+
+        function runTimer() {
+            const totalDurationSeconds = examDurationMinutes * 60;
+            
+            examTimerInterval = setInterval(() => {
+                if(totalSecondsLeft <= 0) {
+                    clearInterval(examTimerInterval);
+                    alert("⏰ انتهى الوقت المحدود للامتحان! سيتم تسليم إجاباتك الحالية تلقائياً.");
+                    calculateAndSubmit(); // تسليم تلقائي عند انتهاء الوقت
+                    return;
+                }
+
+                totalSecondsLeft--;
+
+                // حساب الدقائق والثواني للعرض
+                let mins = Math.floor(totalSecondsLeft / 60);
+                let secs = totalSecondsLeft % 60;
+                document.getElementById('countdown-timer').innerText = 
+                    `${mins < 10 ? '0'+mins : mins}:${secs < 10 ? '0'+secs : secs}`;
+
+                // 🚨 فلاش تحذيري وتنبيه عند منتصف الوقت بالضبط
+                if(!halfTimeSignaled && totalSecondsLeft <= (totalDurationSeconds / 2)) {
+                    halfTimeSignaled = true;
+                    // تفعيل تأثير الفلاش على خلفية الكارت أو الـ body
+                    document.getElementById('student-dashboard').classList.add('flash-warning');
+                    alert("⚠️ تحذير: لقد انقضى نصف وقت الامتحان المخصص! يرجى الإسراع في الحل.");
+                    setTimeout(() => {
+                        document.getElementById('student-dashboard').classList.remove('flash-warning');
+                    }, 4000);
+                }
+
+            }, 1000);
         }
 
         function renderQuestions() {
             const examSection = document.getElementById('exam-section');
-            let html = `<h3 style="color: red; text-align:center;">⚠️ يرجى اختيار إجابة واحدة لكل سؤال:</h3>`;
+            let html = `<h3 style="color: red; text-align:center;">⚠️ أجب عن الأسئلة التالية قبل انتهاء الوقت:</h3>`;
             
             serverQuestions.forEach((q, qIndex) => {
-                html += `<div class="question-block">
-                    <p><b>س ${qIndex + 1}: ${q.question}</b></p>
-                    <div class="radio-group">
-                        <label><input type="radio" name="question-${qIndex}" value="0"> ${q.options[0]}</label>
-                        <label><input type="radio" name="question-${qIndex}" value="1"> ${q.options[1]}</label>
-                        <label><input type="radio" name="question-${qIndex}" value="2"> ${q.options[2]}</label>
-                        <label><input type="radio" name="question-${qIndex}" value="3"> ${q.options[3]}</label>
-                    </div>
-                </div>`;
+                html += `<div class="question-block" data-type="${q.type}">
+                    <p><b>س ${qIndex + 1}: ${q.question}</b> 
+                    <span style="font-size:12px; color:#666;">(${q.mode === 'multiple' ? 'تنبيه: اختر كل الإجابات الصحيحة، السؤال يحتوي على أكثر من إجابة صح' : 'اختر إجابة واحدة فقط'})</span></p>
+                    <div class="${q.mode === 'multiple' ? 'checkbox-group' : 'radio-group'}">`;
+                
+                // عرض الخيارات المتاحة للسؤال
+                q.options.forEach((opt, oIndex) => {
+                    if(q.mode === 'multiple') {
+                        // نظام المربعات لأكثر من إجابة صحيحة
+                        html += `<label><input type="checkbox" name="question-${qIndex}" value="${oIndex}"> ${opt}</label>`;
+                    } else {
+                        // نظام الدوائر لإجابة واحدة صحيحة
+                        html += `<label><input type="radio" name="question-${qIndex}" value="${oIndex}"> ${opt}</label>`;
+                    }
+                });
+
+                html += `</div></div>`;
             });
 
-            html += `<button onclick="calculateAndSubmit()" style="background-color: #dc3545;">إنهاء وتصحيح الامتحان تلقائياً</button>`;
+            html += `<button onclick="calculateAndSubmit()" style="background-color: #dc3545; margin-top:20px;">إنهاء وتصحيح الامتحان وتسليم الدرجة</button>`;
             examSection.innerHTML = html;
         }
 
         function calculateAndSubmit() {
+            // إيقاف العداد التنازلي فوراً لمنع التكرار
+            if(examTimerInterval) clearInterval(examTimerInterval);
+            document.getElementById('timer-container').style.display = "none";
+
             let totalQuestions = serverQuestions.length;
             let correctAnswersCount = 0;
 
             serverQuestions.forEach((q, qIndex) => {
-                const selected = document.querySelector(`input[name="question-${qIndex}"]:checked`);
-                if(selected) {
-                    if(parseInt(selected.value) === q.correctAnswer) {
-                        correctAnswersCount++;
+                // إيجاد العناصر المختارة لهذا السؤال
+                const selectedElements = document.querySelectorAll(`input[name="question-${qIndex}"]:checked`);
+                let userAnswers = [];
+                selectedElements.forEach(el => userAnswers.push(parseInt(el.value)));
+
+                // مقارنة إجابات الطالب بالإجابات الصحيحة المسجلة في السيرفر
+                let isCorrect = false;
+                
+                if(userAnswers.length > 0) {
+                    // فرز وترتيب المصفوفات لضمان دقة المقارنة
+                    let correctArr = q.correctAnswers.sort((a,b)=>a-b);
+                    let userArr = userAnswers.sort((a,b)=>a-b);
+                    
+                    // يجب أن يتطابق الطول والقيم بالظبط
+                    if(correctArr.length === userArr.length && correctArr.every((val, index) => val === userArr[index])) {
+                        isCorrect = true;
                     }
+                }
+
+                if(isCorrect) {
+                    correctAnswersCount++;
                 }
             });
 
@@ -291,8 +480,8 @@
                 endTime: endTime,
                 score: finalScore
             }).then(() => {
-                alert(`تم تسليم الإجابات بنجاح! نتيجتك هي: ${finalScore}`);
-                checkStudentStatus(); 
+                alert(`تم حفظ وتصحيح امتحانك بنجاح على السيرفر! نتيجتك النهائية هي: ${finalScore}`);
+                checkStudentStatus(); // لقفل الشاشة ومنع إعادة الحل
             });
         }
     </script>
