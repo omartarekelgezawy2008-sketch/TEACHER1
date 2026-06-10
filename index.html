@@ -3,469 +3,431 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منصة الامتحانات الاحترافية المؤمنة ضد الغش</title>
+    <title>منصة التواصل الفوري والاشعارات الذكية</title>
     <style>
-        /* منع تحديد النصوص في الموقع بالكامل لحمايته من النسخ */
-        * {
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: #eef2f3; 
+            margin: 0; 
+            padding: 10px; 
+            direction: rtl;
         }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #eef2f3; margin: 0; padding: 20px; text-align: center; color: #333; }
-        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 8px 16px rgba(0,0,0,0.1); max-width: 650px; margin: 20px auto; border-top: 5px solid #007bff; text-align: right; transition: background 0.3s; }
-        h1, h2, h3 { text-align: center; }
-        input, button, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; box-sizing: border-box; }
-        button { background-color: #007bff; color: white; cursor: pointer; border: none; font-weight: bold; transition: 0.3s; }
-        button:hover { background-color: #0056b3; }
-        .hidden { display: none; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; text-align: center; }
-        th, td { border: 1px solid #ddd; padding: 10px; }
-        th { background-color: #007bff; color: white; }
-        .announcement { background: #fff3cd; color: #856404; padding: 15px; border-radius: 6px; border-right: 5px solid #ffc107; margin-bottom: 20px; font-weight: bold; }
-        .question-block { background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #dee2e6; }
-        .checkbox-group, .radio-group { margin: 10px 0; }
-        .checkbox-group label, .radio-group label { display: block; background: white; padding: 10px; margin: 5px 0; border-radius: 5px; border: 1px solid #ddd; cursor: pointer; }
-        .checkbox-group input, .radio-group input { width: auto; margin-left: 10px; }
-        .timer-box { font-size: 22px; font-weight: bold; color: #dc3545; background: #f8d7da; padding: 10px; border-radius: 6px; border: 1px solid #f5c6cb; position: sticky; top: 10px; z-index: 1000; display: inline-block; margin-bottom: 15px; }
-        .tab-btn { width: 48%; display: inline-block; background-color: #6c757d; }
-        .tab-active { background-color: #007bff !important; }
+        .card { 
+            background: white; 
+            padding: 25px; 
+            border-radius: 12px; 
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1); 
+            max-width: 600px; 
+            margin: 20px auto; 
+            border-top: 5px solid #007bff; 
+        }
+        h1, h2, h3 { text-align: center; color: #333; margin-top: 5px; }
         
-        @keyframes flash-animation {
-            0% { background-color: white; }
-            50% { background-color: #f8d7da; }
-            100% { background-color: white; }
+        input, button { 
+            width: 100%; 
+            padding: 12px; 
+            margin: 8px 0; 
+            border: 1px solid #ccc; 
+            border-radius: 6px; 
+            font-size: 16px; 
+            box-sizing: border-box; 
         }
-        .flash-warning { animation: flash-animation 0.4s ease-in-out 5; }
+        button { 
+            background-color: #007bff; 
+            color: white; 
+            cursor: pointer; 
+            border: none; 
+            font-weight: bold; 
+            transition: 0.3s; 
+        }
+        button:hover { background-color: #0056b3; }
+        .hidden { display: none !important; }
+        
+        .announcement { 
+            background: #fff3cd; 
+            color: #856404; 
+            padding: 12px; 
+            border-radius: 6px; 
+            border-right: 5px solid #ffc107; 
+            margin-bottom: 15px; 
+            font-weight: bold; 
+            text-align: right;
+            font-size: 14px;
+        }
+
+        #chat-container { display: flex; flex-direction: column; height: 500px; }
+        #messages-box { 
+            flex: 1; 
+            overflow-y: auto; 
+            border: 1px solid #dee2e6; 
+            background-color: #f8f9fa; 
+            padding: 15px; 
+            border-radius: 8px; 
+            margin-bottom: 10px; 
+        }
+        
+        .msg-packet { 
+            margin-bottom: 12px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: flex-start; 
+        }
+        .msg-bubble { 
+            background: #ffffff; 
+            padding: 10px 14px; 
+            border-radius: 15px 15px 0px 15px; 
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1); 
+            max-width: 80%; 
+            text-align: right; 
+            border: 1px solid #e2e3e5;
+        }
+        .msg-meta { font-size: 11px; color: #777; margin-bottom: 3px; margin-right: 5px; }
+        
+        .admin-packet { align-items: flex-start; }
+        .admin-packet .msg-bubble { 
+            background: #e1ffc7; 
+            border-right: 4px solid #25d366; 
+        }
+        
+        .input-group { display: flex; gap: 8px; }
+        .input-group input { flex: 1; margin: 0; }
+        .input-group button { width: auto; padding: 0 25px; margin: 0; background-color: #28a745; }
+        .input-group button:hover { background-color: #218838; }
+
+        .delete-btn { 
+            background: none; 
+            color: #dc3545; 
+            border: none; 
+            padding: 0; 
+            margin-right: 8px; 
+            font-size: 11px; 
+            cursor: pointer; 
+            display: inline; 
+            width: auto;
+        }
+        .delete-btn:hover { text-decoration: underline; }
+        
+        .admin-panel { 
+            background: #fff; 
+            border: 2px dashed #dc3545; 
+            padding: 15px; 
+            border-radius: 8px; 
+            margin-top: 20px; 
+        }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; text-align: center; }
+        th, td { border: 1px solid #ddd; padding: 8px; }
+        th { background-color: #dc3545; color: white; }
     </style>
 </head>
 <body>
 
-    <h1>🚀 نظام الامتحانات الإلكترونية الذكي والمؤمن بالكامل</h1>
+    <h1>🚀 منصة التواصل الفوري الجماعي</h1>
 
-    <div id="login-screen" class="card" style="text-align: center;">
-        <h2>تسجيل الدخول للمنصة</h2>
-        <p style="font-size: 13px; color: #888;">(المستر: محمد / 000 | الطالب عمر: عمر / 124)</p>
-        <input type="text" id="user-name" placeholder="اكتب الاسم">
-        <input type="password" id="user-password" placeholder="اكتب كلمة المرور">
-        <button onclick="login()">دخول المنصة</button>
+    <!-- 1️⃣ شاشة الدخول (تظهر فقط لو المستخدم مش مسجل قبل كده) -->
+    <div id="login-screen" class="card hidden" style="text-align: center;">
+        <h2>تسجيل الدخول إلى الجروب</h2>
+        <p style="font-size: 14px; color: #666; margin-bottom: 15px;">ادخل اسمك مرة واحدة فقط وسيتم حفظه تلقائياً على جهازك</p>
+        <input type="text" id="user-name" placeholder="اكتب اسمك هنا...">
+        <button onclick="login()">دخول الغرفة والتفعيل 💬</button>
     </div>
 
-    <div id="teacher-dashboard" class="card hidden">
-        <h2 style="color: #007bff;">لوحة تحكم المستر 👋</h2>
-        <hr>
-        
-        <div style="background: #e2e3e5; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
-            <label><b>⏱️ حدد وقت هذا الامتحان بالكامل (بالدقائق):</b></label>
-            <input type="number" id="exam-duration-input" value="10" min="1" style="width: 100px; text-align: center;"> دقائق
+    <!-- 2️⃣ واجهة الشات الرئيسي -->
+    <div id="main-dashboard" class="card hidden">
+        <div id="chat-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px;">
+            <span id="welcome-user-text" style="font-weight: bold; color: #007bff;"></span>
+            <button onclick="logout()" id="logout-btn" style="width: auto; padding: 5px 10px; font-size: 12px; background-color: #6c757d; margin: 0;">تغيير الاسم</button>
         </div>
 
-        <div style="text-align: center; margin-bottom: 15px;">
-            <button id="btn-tab-mcq" class="tab-btn tab-active" onclick="switchTeacherTab('mcq')">أسئلة الاختيار من متعدد (MCQ)</button>
-            <button id="btn-tab-tf" class="tab-btn" onclick="switchTeacherTab('tf')">أسئلة صح وغلط</button>
-        </div>
-
-        <div id="section-add-mcq" style="background: #f1f3f5; padding: 15px; border-radius: 8px;">
-            <h3>➕ إضافة سؤال اختيار من متعدد (MCQ)</h3>
-            <input type="text" id="mcq-q-text" placeholder="اكتب رأس السؤال هنا...">
-            
-            <p style="font-size: 13px; color: #555; margin: 2px 0;">* اكتب الاختيارات (يمكنك ملء من 2 إلى 6 اختيارات حسب رغبتك):</p>
-            <input type="text" id="mcq-opt-1" placeholder="الاختيار الأول (أ)">
-            <input type="text" id="mcq-opt-2" placeholder="الاختيار الثاني (ب)">
-            <input type="text" id="mcq-opt-3" placeholder="الاختيار الثالث (ج)">
-            <input type="text" id="mcq-opt-4" placeholder="الاختيار الرابع (د)">
-            <input type="text" id="mcq-opt-5" placeholder="الاختيار الخامس (هـ) - اختياري">
-            <input type="text" id="mcq-opt-6" placeholder="الاختيار السادس (و) - اختياري">
-            
-            <label><b>⚙️ نظام الإجابة الصحيحة للطالب:</b></label>
-            <select id="mcq-mode" onchange="toggleCorrectAnswersSelect()">
-                <option value="single">إجابة واحدة صحيحة فقط (Radio)</option>
-                <option value="multiple">أكثر من إجابة صحيحة (Checkboxes)</option>
-            </select>
-
-            <div id="correct-answers-box" style="margin-top: 10px; background: #e8f4fd; padding: 10px; border-radius: 5px;">
-                <p style="margin: 0 0 5px 0; font-weight: bold;">حدد الإجابة/الإجابات الصحيحة من هنا:</p>
-                <label><input type="checkbox" class="mcq-correct-chk" value="0"> الأول (أ)</label>
-                <label><input type="checkbox" class="mcq-correct-chk" value="1"> الثاني (ب)</label>
-                <label><input type="checkbox" class="mcq-correct-chk" value="2"> الثالث (ج)</label>
-                <label><input type="checkbox" class="mcq-correct-chk" value="3"> الرابع (د)</label>
-                <label><input type="checkbox" class="mcq-correct-chk" value="4"> الخامس (هـ)</label>
-                <label><input type="checkbox" class="mcq-correct-chk" value="5"> السادس (و)</label>
-            </div>
-
-            <button onclick="addMcqQuestion()" style="background-color: #28a745; margin-top: 15px;">➕ حفظ سؤال الـ MCQ</button>
-        </div>
-
-        <div id="section-add-tf" class="hidden" style="background: #fff3cd; padding: 15px; border-radius: 8px;">
-            <h3>➕ إضافة سؤال صح أو غلط</h3>
-            <input type="text" id="tf-q-text" placeholder="اكتب سؤال الصح والغلط هنا...">
-            
-            <label><b>الإجابة الصحيحة لهذا السؤال:</b></label>
-            <select id="tf-correct">
-                <option value="true">صح ✔️</option>
-                <option value="false">غلط ❌</option>
-            </select>
-            <button onclick="addTrueFalseQuestion()" style="background-color: #28a745; margin-top: 15px;">➕ حفظ سؤال صح/غلط</button>
-        </div>
-        
-        <p id="questions-count" style="font-weight: bold; color: green; text-align: center; margin-top: 15px;">الأسئلة المجهزة في هذا الامتحان حتى الآن: 0 أسئلة</p>
-        <button onclick="publishExamToServer()" style="background-color: #ffc107; color: black;">📢 نشر الامتحان بالكامل للطلبة الآن</button>
-        <button onclick="clearServerExam()" style="background-color: #dc3545;">🗑️ مسح الامتحان والنتائج الحالية من السيرفر للبدء من جديد</button>
-
-        <hr>
-        <h3>2️⃣ نشر تعليمات عاجلة للطلبة</h3>
-        <input type="text" id="announcement-text" placeholder="مثال: الحصة القادمة في موعدها الساعة 4">
-        <button onclick="uploadAnnouncement()" style="background-color: #17a2b8;">نشر التنبيه</button>
-
-        <hr>
-        <h3>3️⃣ جدول متابعة الطلاب والدرجات (تحديث لحظي)</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>الطالب</th>
-                    <th>بدأ الساعة</th>
-                    <th>سلم الساعة</th>
-                    <th>النتيجة أوتوماتيك</th>
-                </tr>
-            </thead>
-            <tbody id="results-table-body"></tbody>
-        </table>
-    </div>
-
-    <div id="student-dashboard" class="card hidden">
-        <h2 style="color: #28a745; text-align: center;">لوحة الطالب التعليمية 🎓</h2>
-        <div id="student-welcome-msg" style="text-align: center; font-weight: bold;"></div>
-        
         <div id="announcement-box" class="announcement" style="display: none;"></div>
         
-        <div id="timer-container" style="text-align: center; display: none;">
-            <div class="timer-box">⏱️ الوقت المتبقي: <span id="countdown-timer">00:00</span></div>
+        <div id="chat-container">
+            <div id="messages-box">
+                <p style="text-align: center; color: #888; font-size: 13px;">جاري تحميل المحادثات الفورية...</p>
+            </div>
+            
+            <div class="input-group">
+                <input type="text" id="chat-message-input" placeholder="اكتب رسالتك هنا...">
+                <button onclick="sendMessage()">إرسال</button>
+            </div>
         </div>
 
-        <div id="exam-section">
-            <p style="text-align: center;">جاري فحص السيرفر لوجود امتحانات...</p>
+        <!-- 3️⃣ لوحة المالك / المنشئ -->
+        <div id="owner-panel" class="admin-panel hidden">
+            <h3 style="color: #dc3545; margin-top: 0;">🛠️ أدوات المنشئ والتحكم الكامل (المالك)</h3>
+            
+            <label style="font-size: 14px; font-weight: bold;">📢 نشر تعليمات وتنبيهات عاجلة تظهر لجميع الهواتف:</label>
+            <div class="input-group" style="margin-top: 5px; margin-bottom: 15px;">
+                <input type="text" id="announcement-text" placeholder="مثال: شباب برجاء الالتزام بالقوانين...">
+                <button onclick="uploadAnnouncement()" style="background-color: #17a2b8;">نشر التنبيه</button>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <button onclick="clearServerAnnouncement()" style="background-color: #6c757d; font-size: 13px; padding: 8px;">حذف التنبيه الحالي</button>
+                <button onclick="clearServerChat()" style="background-color: #dc3545; font-size: 13px; padding: 8px;">🗑️ مسح الشات بالكامل</button>
+            </div>
+
+            <h4 style="margin-bottom: 5px; text-align: right; color: #555;">👥 قائمة المتواجدين النشطين:</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>المستخدم</th>
+                        <th>وقت الانضمام</th>
+                        <th>التحكم</th>
+                    </tr>
+                </thead>
+                <tbody id="results-table-body"></tbody>
+            </table>
         </div>
     </div>
 
+    <!-- مكتبات الفايربيز المدمجة بمشروعك الحالي -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
     <script>
+        // إعدادات قاعدة البيانات الخاصة بك
         const firebaseConfig = { databaseURL: "https://kghk-82a53-default-rtdb.firebaseio.com" };
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        let currentUser = {};
-        let tempQuestionsArray = []; 
-        let examTimerInterval = null;
-        let totalSecondsLeft = 0;
-        let halfTimeSignaled = false;
-        
-        let isExamActive = false; // متغير لمعرفة هل الطالب يؤدي الامتحان حالياً أم لا
-        let cheatAttempts = 0; // عداد محاولات الخروج من الصفحة
+        let currentUserName = "";
+        let isOwner = false;
+        let isInitialLoad = true; // لمنع إرسال إشعارات قديمة عند فتح التطبيق لأول مرة
 
-        // تفعيل وضع حماية الصفحة (منع الكليك يمين ومنع الأزرار الساخنة للتصوير أو النسخ)
-        document.addEventListener('contextmenu', event => event.preventDefault());
-        document.addEventListener('keydown', event => {
-            if (event.ctrlKey && (event.key === 'c' || event.key === 'v' || event.key === 'u' || event.key === 'p' || event.key === 's')) {
-                event.preventDefault();
-                alert("🚨 محاولة غير مسموح بها! النسخ والطباعة ممنوع تماماً.");
+        // فحص تلقائي فور فتح الصفحة: هل المستخدم مسجل مسبقاً؟
+        window.onload = function() {
+            // طلب إذن الإشعارات من المتصفح فوراً
+            if ("Notification" in window) {
+                Notification.requestPermission();
             }
-        });
 
+            const savedName = localStorage.getItem("chat_username");
+            if (savedName) {
+                // إذا وجدنا اسم محفوظ، نقوم بتسجيل الدخول به تلقائياً وبدون ريفريش
+                executeLogin(savedName);
+            } else {
+                // إذا لم يجد اسم، يظهر شاشة الدخول فقط
+                document.getElementById('login-screen').classList.remove('hidden');
+            }
+        };
+
+        // دالة الضغط على زر الدخول اليدوي أول مرة
         function login() {
             const name = document.getElementById('user-name').value.trim();
-            const password = document.getElementById('user-password').value.trim();
-            if(!name || !password) return alert("برجاء إدخال الاسم وكلمة المرور أولاً!");
-            currentUser = { name, password };
+            if(!name) return alert("برجاء إدخال الاسم أولاً للدخول!");
+            
+            // حفظ الاسم في ذاكرة التليفون لعدم طلبه مجدداً
+            localStorage.setItem("chat_username", name);
+            executeLogin(name);
+        }
 
-            if(name === "محمد" && password === "000") {
-                document.getElementById('login-screen').classList.add('hidden');
-                document.getElementById('teacher-dashboard').classList.remove('hidden');
-                loadTeacherData();
+        // تنفيذ عملية الدخول وبناء الواجهة
+        function executeLogin(name) {
+            if(name === "000") {
+                currentUserName = "المنشئ (المالك) ⭐";
+                isOwner = true;
             } else {
-                document.getElementById('login-screen').classList.add('hidden');
-                document.getElementById('student-dashboard').classList.remove('hidden');
-                document.getElementById('student-welcome-msg').innerHTML = `<p>مرحباً بالطالب: <b>${name}</b></p>`;
-                checkStudentStatus();
+                currentUserName = name;
+                isOwner = false;
             }
-        }
 
-        // ---------- وظائف المستر ----------
-        function switchTeacherTab(type) {
-            if(type === 'mcq') {
-                document.getElementById('section-add-mcq').classList.remove('hidden');
-                document.getElementById('section-add-tf').classList.add('hidden');
-                document.getElementById('btn-tab-mcq').classList.add('tab-active');
-                document.getElementById('btn-tab-tf').classList.remove('tab-active');
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('main-dashboard').classList.remove('hidden');
+            
+            if(isOwner) {
+                document.getElementById('welcome-user-text').innerHTML = `مرحباً بك: <span style="color: #dc3545;">${currentUserName}</span>`;
+                document.getElementById('owner-panel').classList.remove('hidden');
+                document.getElementById('logout-btn').classList.add('hidden'); // إخفاء زر تغيير الاسم للأدمن لضمان الحماية
             } else {
-                document.getElementById('section-add-mcq').classList.add('hidden');
-                document.getElementById('section-add-tf').classList.remove('hidden');
-                document.getElementById('btn-tab-mcq').classList.remove('tab-active');
-                document.getElementById('btn-tab-tf').classList.add('tab-active');
+                document.getElementById('welcome-user-text').innerText = `المستخدم: ${currentUserName}`;
+            }
+
+            // تحديث حالة الاتصال في الفايربيز
+            const loginTime = new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+            database.ref('myPrivateExam/submissions/' + currentUserName).set({
+                name: currentUserName,
+                startTime: loginTime
+            });
+
+            // بدء استقبال البث المباشر
+            listenToMessages();
+            listenToAnnouncements();
+            if(isOwner) {
+                loadActiveUsers();
+            }
+
+            document.getElementById('chat-message-input').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') sendMessage();
+            });
+        }
+
+        // دالة تتيح للمستخدم العادي الخروج وتغيير اسمه لو أراد
+        function logout() {
+            if(confirm("هل تريد الخروج وتغيير اسمك المسجل؟")) {
+                database.ref('myPrivateExam/submissions/' + currentUserName).remove();
+                localStorage.removeItem("chat_username");
+                location.reload();
             }
         }
 
-        function toggleCorrectAnswersSelect() {
-            const checkboxes = document.querySelectorAll('.mcq-correct-chk');
-            checkboxes.forEach(cb => cb.checked = false);
+        // ---------- نظام إرسال وجلب الرسائل والإشعارات ----------
+        function sendMessage() {
+            const msgInput = document.getElementById('chat-message-input');
+            const text = msgInput.value.trim();
+            if(!text) return;
+
+            const time = new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+
+            database.ref('myPrivateExam/currentExam/chatMessages').push({
+                sender: currentUserName,
+                messageText: text,
+                timeSent: time,
+                role: isOwner ? 'admin' : 'user'
+            });
+
+            msgInput.value = "";
         }
 
-        function addMcqQuestion() {
-            const qText = document.getElementById('mcq-q-text').value.trim();
-            if(!qText) return alert("يرجى كتابة رأس السؤال!");
-            let options = [];
-            for(let i=1; i<=6; i++) {
-                let val = document.getElementById(`mcq-opt-${i}`).value.trim();
-                if(val) options.push(val);
-            }
-            if(options.length < 2) return alert("يجب كتابة اختيارين على الأقل للسؤال!");
+        function listenToMessages() {
+            // الاستماع إلى الرسائل الجديدة المضافة فقط لإرسال إشعارات الهاتف
+            database.ref('myPrivateExam/currentExam/chatMessages').limitToLast(1).on('child_added', (childSnapshot) => {
+                // نضمن ألا نرسل إشعاراً أثناء فتح التطبيق لأول مرة للرسائل القديمة
+                if (isInitialLoad) return;
 
-            let correctAnswers = [];
-            const checkboxes = document.querySelectorAll('.mcq-correct-chk');
-            checkboxes.forEach(cb => {
-                if(cb.checked) {
-                    let idx = parseInt(cb.value);
-                    if(idx < options.length) correctAnswers.push(idx);
+                const data = childSnapshot.val();
+                // أرسل إشعاراً فقط إذا كانت الرسالة قادمة من شخص آخر والموقع في الخلفية
+                if (data.sender !== currentUserName && document.hidden) {
+                    sendPushNotification(data.sender, data.messageText);
                 }
             });
 
-            if(correctAnswers.length === 0) return alert("يجب تحديد إجابة واحدة صحيحة على الأقل!");
-            const mode = document.getElementById('mcq-mode').value;
-            if(mode === 'single' && correctAnswers.length > 1) return alert("اخترت إجابة واحدة وعلّمت على أكثر من اختيار!");
+            // تحديث الشات بالكامل وعرضه لحظياً
+            database.ref('myPrivateExam/currentExam/chatMessages').on('value', (snapshot) => {
+                const msgBox = document.getElementById('messages-box');
+                msgBox.innerHTML = ""; 
 
-            tempQuestionsArray.push({ type: 'mcq', question: qText, options: options, correctAnswers: correctAnswers, mode: mode });
-            updateQuestionsCountText();
-            document.getElementById('mcq-q-text').value = "";
-            for(let i=1; i<=6; i++) document.getElementById(`mcq-opt-${i}`).value = "";
-            checkboxes.forEach(cb => cb.checked = false);
-            alert("تم حفظ سؤال الـ MCQ بنجاح!");
-        }
+                if(snapshot.exists()) {
+                    snapshot.forEach((childSnapshot) => {
+                        const msgId = childSnapshot.key;
+                        const data = childSnapshot.val();
 
-        function addTrueFalseQuestion() {
-            const qText = document.getElementById('tf-q-text').value.trim();
-            if(!qText) return alert("يرجى كتابة سؤال الصح والغلط!");
-            const ans = document.getElementById('tf-correct').value === "true" ? 1 : 0;
+                        let packetClass = "msg-packet";
+                        if(data.role === 'admin') packetClass = "msg-packet admin-packet";
 
-            tempQuestionsArray.push({ type: 'tf', question: qText, options: ["غلط ❌", "صح ✔️"], correctAnswers: [ans], mode: 'single' });
-            updateQuestionsCountText();
-            document.getElementById('tf-q-text').value = "";
-            alert("تم حفظ سؤال صح/غلط بنجاح!");
-        }
+                        let deleteBtnHtml = "";
+                        if(isOwner) {
+                            deleteBtnHtml = `<button class="delete-btn" onclick="deleteMessage('${msgId}')">❌ حذف</button>`;
+                        }
 
-        function updateQuestionsCountText() {
-            document.getElementById('questions-count').innerText = `الأسئلة المجهزة في هذا الامتحان حتى الآن: ${tempQuestionsArray.length} أسئلة`;
-        }
-
-        function publishExamToServer() {
-            if(tempQuestionsArray.length === 0) return alert("لا توجد أسئلة مجهزة لنشرها!");
-            const duration = parseInt(document.getElementById('exam-duration-input').value) || 10;
-            database.ref('myPrivateExam/currentExam').set({ questions: tempQuestionsArray, duration: duration }).then(() => {
-                alert("تم نشر الامتحان وتأمينه بنجاح وهو متاح للطلبة الآن!");
-                tempQuestionsArray = [];
-                updateQuestionsCountText();
+                        msgBox.innerHTML += `
+                            <div class="${packetClass}">
+                                <div class="msg-meta"><b>${data.sender}</b> في ${data.timeSent} ${deleteBtnHtml}</div>
+                                <div class="msg-bubble">${data.messageText}</div>
+                            </div>
+                        `;
+                    });
+                    msgBox.scrollTop = msgBox.scrollHeight;
+                } else {
+                    msgBox.innerHTML = `<p style="text-align: center; color: #888; font-size: 13px;">لا توجد رسائل في الجروب حالياً. ابدأ المحادثة الآن!</p>`;
+                }
+                
+                // بعد انتهاء أول عملية جلب، نغير المتغير ليسمح بالإشعارات للرسائل القادمة لاحقاً
+                isInitialLoad = false;
             });
         }
 
-        function clearServerExam() {
-            if(confirm("هل أنت متأكد من مسح الامتحان والنتائج؟")) {
-                database.ref('myPrivateExam/currentExam').remove();
-                database.ref('myPrivateExam/submissions').remove().then(() => alert("تم تنظيف السيرفر بنجاح."));
+        // دالة إرسال الإشعار الرسمي لنظام أندرويد/آيفون والكمبيوتر
+        function sendPushNotification(sender, text) {
+            if ("Notification" in window && Notification.permission === "granted") {
+                const options = {
+                    body: text,
+                    icon: 'https://cdn-icons-png.flaticon.com/512/134/134914.png', // أيقونة شات افتراضية تظهر بالإشعار
+                    vibrate: [200, 100, 200],
+                    data: { url: window.location.href }
+                };
+                
+                const notification = new Notification(`رسالة جديدة من: ${sender}`, options);
+                
+                // عند الضغط على الإشعار من شاشة الموبايل، يتم فتح التبويب مباشرة
+                notification.onclick = function(event) {
+                    event.preventDefault();
+                    window.focus();
+                    notification.close();
+                };
             }
         }
 
-        function uploadAnnouncement() {
-            const text = document.getElementById('announcement-text').value;
-            database.ref('myPrivateExam/announcement').set(text).then(() => alert("تم نشر التنبيه"));
+        function deleteMessage(msgId) {
+            if(confirm("هل أنت متأكد من رغبتك في حذف هذه الرسالة نهائياً؟")) {
+                database.ref('myPrivateExam/currentExam/chatMessages/' + msgId).remove();
+            }
         }
 
-        function loadTeacherData() {
+        function clearServerChat() {
+            if(confirm("🚨 هل أنت متأكد من مسح شات الجروب بالكامل؟")) {
+                database.ref('myPrivateExam/currentExam/chatMessages').remove();
+            }
+        }
+
+        // ---------- وظائف التنبيهات والتعليمات المباشرة ----------
+        function uploadAnnouncement() {
+            const text = document.getElementById('announcement-text').value.trim();
+            if(!text) return alert("اكتب نص التنبيه أولاً!");
+            database.ref('myPrivateExam/announcement').set(text).then(() => {
+                alert("تم نشر التنبيه بنجاح!");
+                document.getElementById('announcement-text').value = "";
+            });
+        }
+
+        function clearServerAnnouncement() {
+            database.ref('myPrivateExam/announcement').remove().then(() => alert("تم إزالة التنبيه."));
+        }
+
+        document.getElementById('chat-message-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        function listenToAnnouncements() {
+            database.ref('myPrivateExam/announcement').on('value', (snapshot) => {
+                const box = document.getElementById('announcement-box');
+                if(snapshot.exists() && snapshot.val() !== "") {
+                    box.style.display = "block";
+                    box.innerText = "📢 تعليمات من المالك: " + snapshot.val();
+                } else {
+                    box.style.display = "none";
+                }
+            });
+        }
+
+        // ---------- مراقبة وحذف الأعضاء (للمالك فقط) ----------
+        function loadActiveUsers() {
             database.ref('myPrivateExam/submissions').on('value', (snapshot) => {
                 const data = snapshot.val();
                 const tbody = document.getElementById('results-table-body');
                 tbody.innerHTML = "";
                 if(data) {
                     for(let id in data) {
-                        let student = data[id];
+                        let user = data[id];
+                        // تخطي إظهار الأدمن نفسه في لوحة الحذف للسلامة
+                        if(user.name === "المنشئ (المالك) ⭐") continue;
+
                         tbody.innerHTML += `<tr>
-                            <td><b>${student.name}</b></td>
-                            <td style="color: blue;">${student.startTime || '--'}</td>
-                            <td style="color: green;">${student.endTime || 'يمتحن حالياً...'}</td>
-                            <td style="font-weight: bold; color: red;">${student.score || 'لم يسلم بعد'}</td>
+                            <td><b>${user.name}</b></td>
+                            <td style="color: green;">${user.startTime || '--'}</td>
+                            <td><button onclick="kickUser('${user.name}')} "style="background-color:#dc3545; padding: 4px 8px; margin:0; font-size:12px; width:auto;">طرد 🚫</button></td>
                         </tr>`;
                     }
                 } else {
-                    tbody.innerHTML = `<tr><td colspan="4">لا توجد نتائج مسجلة حتى الآن.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="3">لا يوجد مستخدمين نشطين حالياً.</td></tr>`;
                 }
             });
         }
 
-        // ---------- وظائف الطالب وتأمين الغش ----------
-        let serverQuestions = []; 
-        let examDurationMinutes = 10;
-
-        function checkStudentStatus() {
-            database.ref('myPrivateExam/announcement').on('value', (snapshot) => {
-                const box = document.getElementById('announcement-box');
-                if(snapshot.exists() && snapshot.val() !== "") {
-                    box.style.display = "block";
-                    box.innerText = "📢 تنبيه المستر: " + snapshot.val();
-                } else {
-                    box.style.display = "none";
-                }
-            });
-
-            database.ref('myPrivateExam/submissions/' + currentUser.name).once('value', (snapshot) => {
-                if(snapshot.exists() && snapshot.val().endTime) {
-                    document.getElementById('exam-section').innerHTML = `<h3 style="color: red; text-align:center;">عذراً، لقد أتممت هذا الامتحان مسبقاً أو تم إلغاؤه بسبب الغش!<br> درجتك النهائية هي: ${snapshot.val().score}</h3>`;
-                } else {
-                    watchActiveExam();
-                }
-            });
-        }
-
-        function watchActiveExam() {
-            database.ref('myPrivateExam/currentExam').on('value', (snapshot) => {
-                const examSection = document.getElementById('exam-section');
-                if(snapshot.exists()) {
-                    serverQuestions = snapshot.val().questions;
-                    examDurationMinutes = snapshot.val().duration || 10;
-                    examSection.innerHTML = `
-                        <h3 style="color: #385723; text-align:center;">📋 يوجد امتحان جديد متاح الآن ومؤمن ضد الغش</h3>
-                        <p style="text-align:center; color:red; font-weight:bold;">⚠️ تنبيه: الخروج من الصفحة أو محاولة أخذ لقطة شاشة سيلغي امتحانك فوراً!</p>
-                        <button onclick="startExam()" style="background-color: #28a745;">اضغط هنا لبدء الامتحان والوقت فوراً</button>
-                    `;
-                } else {
-                    examSection.innerHTML = `<h3 style="text-align:center;">لا توجد امتحانات مرفوعة حالياً. ☕</h3>`;
-                }
-            });
-        }
-
-        function startExam() {
-            const startTime = new Date().toLocaleTimeString('ar-EG');
-            database.ref('myPrivateExam/submissions/' + currentUser.name).update({ name: currentUser.name, startTime: startTime });
-
-            document.getElementById('timer-container').style.display = "block";
-            totalSecondsLeft = examDurationMinutes * 60;
-            halfTimeSignaled = false;
-            cheatAttempts = 0;
-            isExamActive = true; // تم تفعيل كاشف الغش
-            
-            runTimer();
-            renderQuestions();
-        }
-
-        // 🚨 نظام كشف الخروج من الصفحة (الانتقال لتبويب آخر أو تطبيق آخر)
-        document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'hidden' && isExamActive) {
-                cheatAttempts++;
-                document.getElementById('student-dashboard').classList.add('flash-warning');
-                
-                if (cheatAttempts === 1) {
-                    alert("⚠️ تحذير غش صريح (المرة الأولى)! غير مسموح بالخروج من الصفحة. عُد للامتحان فوراً!");
-                } else if (cheatAttempts === 2) {
-                    alert("⚠️ تحذير نهائي (المرة الثانية)! إذا خرجت مرة أخرى سيتم سحب الورقة وإلغاء الامتحان!");
-                } else if (cheatAttempts >= 3) {
-                    isExamActive = false;
-                    if(examTimerInterval) clearInterval(examTimerInterval);
-                    document.getElementById('timer-container').style.display = "none";
-                    
-                    alert("🚨 تم سحب الامتحان! لقد تجاوزت الحد المسموح به لمحاولات الغش والخروج من الصفحة.");
-                    submitExamDueToCheating(); // سحب فوري للورقة
-                }
-                
-                setTimeout(() => {
-                    document.getElementById('student-dashboard').classList.remove('flash-warning');
-                }, 3000);
+        // دالة لطرد المستخدم وحذفه (متاحة للمالك)
+        function kickUser(targetName) {
+            if(confirm(`هل تريد طرد وإزالة المستخدم ${targetName} من السيرفر؟`)) {
+                database.ref('myPrivateExam/submissions/' + targetName).remove();
             }
-        });
-
-        function runTimer() {
-            const totalDurationSeconds = examDurationMinutes * 60;
-            examTimerInterval = setInterval(() => {
-                if(totalSecondsLeft <= 0) {
-                    clearInterval(examTimerInterval);
-                    isExamActive = false;
-                    alert("⏰ انتهى الوقت المخصص للامتحان! سيتم سحب الورقة وتصحيحها تلقائياً.");
-                    calculateAndSubmit();
-                    return;
-                }
-                totalSecondsLeft--;
-                let mins = Math.floor(totalSecondsLeft / 60);
-                let secs = totalSecondsLeft % 60;
-                document.getElementById('countdown-timer').innerText = `${mins < 10 ? '0'+mins : mins}:${secs < 10 ? '0'+secs : secs}`;
-
-                if(!halfTimeSignaled && totalSecondsLeft <= (totalDurationSeconds / 2)) {
-                    halfTimeSignaled = true;
-                    document.getElementById('student-dashboard').classList.add('flash-warning');
-                    alert("⚠️ انتبه: لقد انقضى نصف وقت الامتحان المخصص!");
-                    setTimeout(() => document.getElementById('student-dashboard').classList.remove('flash-warning'), 3000);
-                }
-            }, 1000);
-        }
-
-        function renderQuestions() {
-            const examSection = document.getElementById('exam-section');
-            let html = `<h3 style="color: red; text-align:center;">📋 أجب بتركيز:</h3>`;
-            serverQuestions.forEach((q, qIndex) => {
-                html += `<div class="question-block" data-type="${q.type}">
-                    <p><b>س ${qIndex + 1}: ${q.question}</b> <span style="font-size:11px; color:#666;">(${q.mode === 'multiple' ? 'أكثر من إجابة صحيحة' : 'إجابة واحدة فقط'})</span></p>
-                    <div class="${q.mode === 'multiple' ? 'checkbox-group' : 'radio-group'}">`;
-                q.options.forEach((opt, oIndex) => {
-                    if(q.mode === 'multiple') {
-                        html += `<label><input type="checkbox" name="question-${qIndex}" value="${oIndex}"> ${opt}</label>`;
-                    } else {
-                        html += `<label><input type="radio" name="question-${qIndex}" value="${oIndex}"> ${opt}</label>`;
-                    }
-                });
-                html += `</div></div>`;
-            });
-            html += `<button onclick="calculateAndSubmit()" style="background-color: #dc3545; margin-top:20px;">إنهاء وتسليم الامتحان</button>`;
-            examSection.innerHTML = html;
-        }
-
-        function calculateAndSubmit() {
-            if(examTimerInterval) clearInterval(examTimerInterval);
-            document.getElementById('timer-container').style.display = "none";
-            isExamActive = false;
-
-            let totalQuestions = serverQuestions.length;
-            let correctAnswersCount = 0;
-
-            serverQuestions.forEach((q, qIndex) => {
-                const selectedElements = document.querySelectorAll(`input[name="question-${qIndex}"]:checked`);
-                let userAnswers = [];
-                selectedElements.forEach(el => userAnswers.push(parseInt(el.value)));
-
-                let isCorrect = false;
-                if(userAnswers.length > 0) {
-                    let correctArr = q.correctAnswers.sort((a,b)=>a-b);
-                    let userArr = userAnswers.sort((a,b)=>a-b);
-                    if(correctArr.length === userArr.length && correctArr.every((val, index) => val === userArr[index])) {
-                        isCorrect = true;
-                    }
-                }
-                if(isCorrect) correctAnswersCount++;
-            });
-
-            let finalScore = `${correctAnswersCount} من ${totalQuestions}`;
-            const endTime = new Date().toLocaleTimeString('ar-EG');
-
-            database.ref('myPrivateExam/submissions/' + currentUser.name).update({ endTime: endTime, score: finalScore }).then(() => {
-                alert(`تم حفظ وتصحيح امتحانك بنجاح! النتيجة: ${finalScore}`);
-                checkStudentStatus();
-            });
-        }
-
-        // دالة السحب الفوري والإلغاء عند الغش المتكرر والخروج 3 مرات
-        function submitExamDueToCheating() {
-            isExamActive = false;
-            let finalScore = "❌ ملغي (بسبب محاولة الغش)";
-            const endTime = new Date().toLocaleTimeString('ar-EG');
-
-            database.ref('myPrivateExam/submissions/' + currentUser.name).update({ endTime: endTime, score: finalScore }).then(() => {
-                checkStudentStatus();
-            });
         }
     </script>
 </body>
