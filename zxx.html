@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة الأدمن - رفع الميديا المباشر</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f7f6; margin: 0; padding: 10px; color: #333; direction: rtl; }
+        .container { max-width: 100%; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); box-sizing: border-box; }
+        h1, h3 { text-align: center; color: #2c3e50; font-size: 18px; margin: 10px 0; }
+        .card { background: #fff; padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 15px; box-sizing: border-box; }
+        input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 15px; }
+        button { width: 100%; background: #2980b9; color: white; padding: 14px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; }
+        .list-item { background: #f9f9f9; padding: 10px; margin: 5px 0; border-right: 4px solid #2980b9; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
+        .delete-btn { background: #c0392b; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; }
+        .login-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:#2c3e50; display:flex; justify-content:center; align-items:center; z-index:9999; padding: 15px; box-sizing: border-box; }
+        .login-box { background:white; padding:20px; border-radius:8px; width:100%; max-width:320px; text-align:center; }
+        .progress-bar { background: #e2e8f0; border-radius: 4px; height: 10px; margin: 5px 0; display: none; overflow: hidden; }
+        .progress-fill { background: #27ae60; height: 100%; width: 0%; transition: width 0.2s; }
+    </style>
+</head>
+<body>
+
+<div class="login-overlay" id="loginScreen">
+    <div class="login-box">
+        <h2>لوحة الأدمن 👑</h2>
+        <input type="password" id="adminPasswordInput" placeholder="كلمة السر">
+        <button onclick="checkAdminLogin()" style="background:#2c3e50; margin-top:10px;">دخول</button>
+    </div>
+</div>
+
+<div class="container" id="mainContent" style="display: none;">
+    <h1>لوحة تحكم الأدمن 👑</h1>
+    
+    <div class="card">
+        <h3>👥 إضافة مشترك جديد</h3>
+        <input type="text" id="clientName" placeholder="اسم المشترك">
+        <input type="text" id="clientPhone" placeholder="رقم الهاتف">
+        <button onclick="addClient()">حفظ المشترك</button>
+        <div id="clientsList" style="margin-top:10px; max-height:150px; overflow-y:auto;"></div>
+    </div>
+
+    <div class="card">
+        <h3>🎬 إضافة الوجبات أو الميديا المتعددة</h3>
+        <select id="msgCategory" onchange="toggleInputType()">
+            <option value="جروب الأكل">جروب الأكل 🍏 (نص)</option>
+            <option value="جروب تمارين الجيم">جروب تمارين الجيم 💪 (نص)</option>
+            <option value="جروب تمارين البيت">جروب تمارين البيت 🏠 (نص)</option>
+            <option value="جروب ميديا وتوضيح">جروب ميديا وتوضيح 🎬 (فيديوهات وصور من الجهاز)</option>
+        </select>
+        
+        <input type="text" id="btnTitle" placeholder="اسم الزرار (مثال: بايسبس بالدمبل)">
+        <textarea id="msgContent" rows="5" placeholder="اكتب التفاصيل هنا..."></textarea>
+        
+        <div id="mediaUploadBox" style="display: none; border: 2px dashed #ccc; padding: 15px; text-align: center; margin: 10px 0; border-radius: 6px;">
+            <label style="font-weight: bold; display: block; margin-bottom: 8px;">اختر الفيديو أو الصورة من الاستوديو:</label>
+            <input type="file" id="mediaFile" accept="image/*,video/*" multiple style="padding:5px;">
+            <div class="progress-bar" id="progBar"><div class="progress-fill" id="progFill"></div></div>
+            <small id="uploadStatus" style="color:#27ae60; font-weight:bold; display:block; margin-top:5px;"></small>
+        </div>
+
+        <button onclick="addMessage()">حفظ ونشر بموقع الكابتن</button>
+        <div id="messagesList" style="margin-top:10px; max-height:200px; overflow-y:auto;"></div>
+    </div>
+</div>
+
+<script>
+    function checkAdminLogin() {
+        if(document.getElementById('adminPasswordInput').value === "000") {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
+            initFirebase();
+        } else { alert("كلمة السر خاطئة!"); }
+    }
+
+    let database;
+    function initFirebase() {
+        firebase.initializeApp({ databaseURL: "https://cort-6368a-default-rtdb.firebaseio.com" });
+        database = firebase.database();
+
+        database.ref('clients').on('value', (snapshot) => {
+            let html = '';
+            snapshot.forEach((child) => {
+                html += `<div class="list-item"><span>👤 ${child.val().name}</span><button class="delete-btn" onclick="deleteClient('${child.key}')">حذف</button></div>`;
+            });
+            document.getElementById('clientsList').innerHTML = html || 'لا يوجد مشتركين';
+        });
+
+        database.ref('messages').on('value', (snapshot) => {
+            let html = '';
+            snapshot.forEach((child) => {
+                html += `<div class="list-item"><span><strong>[${child.val().category}]</strong> ${child.val().title}</span><button class="delete-btn" onclick="deleteMessage('${child.key}')">حذف</button></div>`;
+            });
+            document.getElementById('messagesList').innerHTML = html || 'لا يوجد خانات';
+        });
+    }
+
+    function toggleInputType() {
+        const cat = document.getElementById('msgCategory').value;
+        if(cat === "جروب ميديا وتوضيح") {
+            document.getElementById('mediaUploadBox').style.display = "block";
+            document.getElementById('msgContent').style.display = "none";
+        } else {
+            document.getElementById('mediaUploadBox').style.display = "none";
+            document.getElementById('msgContent').style.display = "block";
+        }
+    }
+
+    // دالة الرفع المباشرة بدون أي حسابات أو اشتراكات
+    async function uploadFileDirectly(file, onProgress) {
+        return new Promise((resolve, reject) => {
+            const formData = new FormData();
+            let url = "";
+
+            if (file.type.startsWith('image/')) {
+                // رفع الصور على سيرفر مجاني مفتوح للصور
+                formData.append('image', file);
+                url = "https://api.imgbb.com/1/upload?key=6dadc99b5bc93c04ffb5f09903901b04"; 
+            } else {
+                // رفع الفيديوهات على سيرفر مجاني مفتوح للفيديوهات
+                formData.append('reqtype', 'fileupload');
+                formData.append('fileToUpload', file);
+                url = "https://catbox.moe/user/api.php";
+            }
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', url, true);
+
+            xhr.upload.onprogress = (event) => {
+                if (event.lengthComputable) {
+                    const percent = (event.loaded / event.total) * 100;
+                    onProgress(percent);
+                }
+            };
+
+            xhr.onload = () => {
+                if (xhr.status === 200) {
+                    if (file.type.startsWith('image/')) {
+                        const response = JSON.parse(xhr.responseText);
+                        resolve(response.data.url);
+                    } else {
+                        resolve(xhr.responseText.trim());
+                    }
+                } else { reject('فشل الرفع'); }
+            };
+            xhr.onerror = () => reject('خطأ اتصال');
+            xhr.send(formData);
+        });
+    }
+
+    async function addMessage() {
+        const category = document.getElementById('msgCategory').value;
+        const title = document.getElementById('btnTitle').value.trim();
+        
+        if(!title) { alert("اكتب اسم الزرار أولاً!"); return; }
+
+        if(category === "جروب ميديا وتوضيح") {
+            const files = document.getElementById('mediaFile').files;
+            if(files.length === 0) { alert("اختار ملف من الاستوديو!"); return; }
+            
+            document.getElementById('progBar').style.display = "block";
+            let uploadedUrls = [];
+
+            for (let i = 0; i < files.length; i++) {
+                try {
+                    document.getElementById('uploadStatus').innerText = `جاري الرفع ملف ${i+1} من ${files.length}...`;
+                    const url = await uploadFileDirectly(files[i], (percent) => {
+                        document.getElementById('progFill').style.width = percent + '%';
+                    });
+                    uploadedUrls.push(url);
+                } catch (err) {
+                    alert(`فشل رفع الملف رقم ${i+1}. تأكد من اتصال الإنترنت وجرب تاني.`);
+                    document.getElementById('progBar').style.display = "none";
+                    return;
+                }
+            }
+
+            const allUrlsText = uploadedUrls.join('\n');
+            database.ref('messages').push({ category: category, title: title, content: allUrlsText });
+            resetForm();
+            alert("تم الرفع بنجاح ونشر الزرار للكابتن! 🎉");
+
+        } else {
+            const content = document.getElementById('msgContent').value.trim();
+            if(!content) { alert("اكتب تفاصيل الخانة أولاً!"); return; }
+            database.ref('messages').push({ category: category, title: title, content: content });
+            resetForm();
+            alert("تم الحفظ بنجاح!");
+        }
+    }
+
+    function resetForm() {
+        document.getElementById('btnTitle').value = '';
+        document.getElementById('msgContent').value = '';
+        document.getElementById('mediaFile').value = '';
+        document.getElementById('progBar').style.display = "none";
+        document.getElementById('progFill').style.width = '0%';
+        document.getElementById('uploadStatus').innerText = "";
+    }
+
+    function addClient() {
+        const name = document.getElementById('clientName').value.trim();
+        let phone = document.getElementById('clientPhone').value.trim();
+        if(name && phone) {
+            if(phone.startsWith('0')) phone = '2' + phone;
+            database.ref('clients').push({ name: name, phone: phone });
+            document.getElementById('clientName').value = ''; document.getElementById('clientPhone').value = '';
+            alert("تم حفظ المشترك!");
+        }
+    }
+    function deleteClient(id) { database.ref('clients/' + id).remove(); }
+    function deleteMessage(id) { database.ref('messages/' + id).remove(); }
+</script>
+</body>
+</html>

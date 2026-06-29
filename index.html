@@ -3,516 +3,157 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منصة التواصل المتقدمة والوسائط</title>
+    <title>موقع المدرب - أزرار وإرسال سريع</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background-color: #eef2f3; 
-            margin: 0; 
-            padding: 10px; 
-            direction: rtl;
-        }
-        .card { 
-            background: white; 
-            padding: 25px; 
-            border-radius: 12px; 
-            box-shadow: 0 8px 16px rgba(0,0,0,0.1); 
-            max-width: 600px; 
-            margin: 20px auto; 
-            border-top: 5px solid #007bff; 
-        }
-        h1, h2, h3 { text-align: center; color: #333; margin-top: 5px; }
+        body { font-family: Arial, sans-serif; background-color: #f4f7f6; margin: 0; padding: 10px; color: #333; }
+        .container { max-width: 1100px; margin: auto; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); box-sizing: border-box; }
+        h1, h2, h3 { text-align: center; color: #2c3e50; font-size: 20px; }
         
-        input, button { 
-            width: 100%; 
-            padding: 12px; 
-            margin: 8px 0; 
-            border: 1px solid #ccc; 
-            border-radius: 6px; 
-            font-size: 16px; 
-            box-sizing: border-box; 
-        }
-        button { 
-            background-color: #007bff; 
-            color: white; 
-            cursor: pointer; 
-            border: none; 
-            font-weight: bold; 
-            transition: 0.3s; 
-        }
-        button:hover { background-color: #0056b3; }
-        .hidden { display: none !important; }
-        
-        .announcement { 
-            background: #fff3cd; 
-            color: #856404; 
-            padding: 12px; 
-            border-radius: 6px; 
-            border-right: 5px solid #ffc107; 
-            margin-bottom: 15px; 
-            font-weight: bold; 
-            text-align: right;
-            font-size: 14px;
-        }
-
-        #chat-container { display: flex; flex-direction: column; height: 550px; }
-        #messages-box { 
-            flex: 1; 
-            overflow-y: auto; 
-            border: 1px solid #dee2e6; 
-            background-color: #f8f9fa; 
-            padding: 15px; 
-            border-radius: 8px; 
-            margin-bottom: 10px; 
+        /* جعل لوحة المدرب مرنة بالكامل للموبايل والكمبيوتر */
+        .grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 15px; margin-top: 15px; }
+        @media (max-width: 768px) {
+            .grid { grid-template-columns: 1fr; }
+            h1 { font-size: 18px; }
         }
         
-        .msg-packet { 
-            margin-bottom: 12px; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: flex-start; 
-        }
-        .msg-bubble { 
-            background: #ffffff; 
-            padding: 10px 14px; 
-            border-radius: 15px 15px 0px 15px; 
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1); 
-            max-width: 80%; 
-            text-align: right; 
-            border: 1px solid #e2e3e5;
-            word-break: break-word;
-        }
-        .msg-bubble img, .msg-bubble video {
-            max-width: 100%;
-            border-radius: 8px;
-            margin-top: 5px;
-            display: block;
-        }
-        .msg-bubble audio {
-            margin-top: 5px;
-            display: block;
-            max-width: 100%;
-        }
-        .msg-meta { font-size: 11px; color: #777; margin-bottom: 3px; margin-right: 5px; }
+        .card { background: #fff; padding: 15px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        textarea { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 15px; }
         
-        .admin-packet { align-items: flex-start; }
-        .admin-packet .msg-bubble { 
-            background: #e1ffc7; 
-            border-right: 4px solid #25d366; 
-        }
+        /* أزرار ذكية تختفي وتظهر بالتسمية المخصصة */
+        .msg-btn { display: block; width: 100%; text-align: right; background: #f8f9fa; border: 2px solid #ced4da; padding: 12px; margin: 8px 0; border-radius: 6px; cursor: pointer; transition: 0.2s; font-size: 15px; color: #2c3e50; font-weight: bold; }
+        .msg-btn:hover { background: #e8f8f5; border-color: #2ab573; color: #27ae60; }
+        .msg-btn span { font-weight: normal; font-size: 12px; color: #7f8c8d; background: #eef2f7; padding: 3px 6px; border-radius: 4px; margin-left: 5px; }
         
-        .input-group { display: flex; gap: 8px; align-items: center; }
-        .input-group input { flex: 1; margin: 0; }
-        .input-group button { width: auto; padding: 0 20px; margin: 0; background-color: #28a745; height: 45px; }
+        .client-box { padding: 12px; margin: 6px 0; background: #f1f5f9; border-right: 5px solid #3498db; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 15px; }
+        .client-box:hover { background: #e2e8f0; }
         
-        /* شريط الأدوات المرفقة */
-        .media-toolbar {
-            display: flex;
-            gap: 10px;
-            margin-top: 8px;
-            justify-content: flex-start;
-            background: #f1f3f5;
-            padding: 8px;
-            border-radius: 6px;
-        }
-        .media-btn {
-            background: #6c757d;
-            padding: 6px 12px;
-            font-size: 13px;
-            width: auto;
-            margin: 0;
-        }
-        .media-btn.recording {
-            background: #dc3545;
-            animation: pulse 1s infinite;
-        }
-
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
-
-        .delete-btn { 
-            background: none; color: #dc3545; border: none; padding: 0; 
-            margin-right: 8px; font-size: 11px; cursor: pointer; display: inline; width: auto;
-        }
-        .delete-btn:hover { text-decoration: underline; }
+        .send-btn { width: 100%; background: #25D366; color: white; padding: 15px; border: none; border-radius: 4px; cursor: pointer; font-size: 18px; font-weight: bold; }
+        .send-btn:hover { background: #21b857; }
+        .selected-box { background: #f0fdf4; padding: 15px; border-radius: 8px; border: 2px dashed #25D366; box-sizing: border-box; }
         
-        .admin-panel { 
-            background: #fff; border: 2px dashed #dc3545; padding: 15px; border-radius: 8px; margin-top: 20px; 
-        }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; text-align: center; }
-        th, td { border: 1px solid #ddd; padding: 8px; }
-        th { background-color: #dc3545; color: white; }
+        .login-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:#27ae60; display:flex; justify-content:center; align-items:center; z-index:9999; padding: 15px; box-sizing: border-box; }
+        .login-box { background:white; padding:25px; border-radius:8px; width:100%; max-width:340px; text-align:center; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
     </style>
 </head>
 <body>
 
-    <h1>🚀 منصة التواصل والوسائط المتعددة</h1>
-
-    <!-- 1️⃣ شاشة الدخول -->
-    <div id="login-screen" class="card hidden" style="text-align: center;">
-        <h2>تسجيل الدخول إلى الجروب</h2>
-        <p style="font-size: 14px; color: #666; margin-bottom: 15px;">ادخل اسمك مرة واحدة فقط وسيتم حفظه تلقائياً على جهازك</p>
-        <input type="text" id="user-name" placeholder="اكتب اسمك هنا...">
-        <button onclick="login()">دخول الغرفة والتفعيل 💬</button>
+<div class="login-overlay" id="loginScreen">
+    <div class="login-box">
+        <h2>لوحة الكابتن 🏃‍♂️</h2>
+        <p>برجاء إدخال كلمة السر للدخول</p>
+        <input type="password" id="coachPasswordInput" placeholder="كلمة السر">
+        <button onclick="checkCoachLogin()" style="background:#27ae60; color:white; border:none; padding:10px; width:100%; margin-top:10px; border-radius:4px; cursor:pointer; font-weight:bold;">دخول</button>
     </div>
+</div>
 
-    <!-- 2️⃣ واجهة الشات الرئيسي -->
-    <div id="main-dashboard" class="card hidden">
-        <div id="chat-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px;">
-            <span id="welcome-user-text" style="font-weight: bold; color: #007bff;"></span>
-            <button onclick="logout()" id="logout-btn" style="width: auto; padding: 5px 10px; font-size: 12px; background-color: #6c757d; margin: 0;">تغيير الاسم</button>
+<div class="container" id="mainContent" style="display: none;">
+    <h1>لوحة تواصل الكابتن 🏃‍♂️</h1>
+    <hr>
+
+    <div class="grid">
+        <div class="card">
+            <h3>👤 خطوة 1: اختر المشترك من السيستم</h3>
+            <div id="coachClients" style="max-height: 180px; overflow-y: auto; margin-bottom: 20px;">جاري تحميل المشتركين...</div>
+
+            <h3>📱 خطوة 2: اضغط على الزر السريع لنسخ المحتوى</h3>
+            <div id="coachMessages" style="max-height: 400px; overflow-y: auto;">جاري تحميل الخانات الجاهزة...</div>
         </div>
 
-        <div id="announcement-box" class="announcement" style="display: none;"></div>
-        
-        <div id="chat-container">
-            <div id="messages-box">
-                <p style="text-align: center; color: #888; font-size: 13px;">جاري تحميل المحادثات والوسائط...</p>
-            </div>
+        <div class="card selected-box">
+            <h3>خطوة 3: مراجعة النص المجمع والإرسال</h3>
+            <p><strong>المشترك المحدد:</strong> <span id="selectedClientName" style="color:blue; font-size:18px;">لم يتم اختيار أحد</span></p>
+            <p><strong>رقم هاتف المشترك:</strong> <span id="selectedClientPhone" style="font-weight:bold;">-</span></p>
+            <hr>
             
-            <div class="input-group">
-                <input type="text" id="chat-message-input" placeholder="اكتب رسالتك هنا...">
-                <button onclick="sendMessage('text')">إرسال</button>
-            </div>
-
-            <!-- شريط أدوات رفع الصور والفيديو والتسجيل الصوتي -->
-            <div class="media-toolbar">
-                <button class="media-btn" onclick="document.getElementById('image-loader').click()">🖼️ صورة</button>
-                <button class="media-btn" onclick="document.getElementById('video-loader').click()">🎥 فيديو</button>
-                <button class="media-btn" id="voice-btn" onclick="toggleVoiceRecording()">🎙️ تسجيل صوتي</button>
-                
-                <!-- مدخلات ملفات مخفية -->
-                <input type="file" id="image-loader" accept="image/*" class="hidden" onchange="handleMediaUpload(this, 'image')">
-                <input type="file" id="video-loader" accept="video/*" class="hidden" onchange="handleMediaUpload(this, 'video')">
-            </div>
-        </div>
-
-        <!-- 3️⃣ لوحة المالك / المنشئ -->
-        <div id="owner-panel" class="admin-panel hidden">
-            <h3 style="color: #dc3545; margin-top: 0;">🛠️ أدوات المنشئ والتحكم الكامل (المالك)</h3>
+            <label>المحتوى المجمع داخل الخانة حالياً:</label>
+            <textarea id="finalMessage" rows="12" placeholder="عند الضغط على أي زر من أزرار اليمين (مثل: دايت عمر)، سيتم كتابة المحتوى الطويل والتفاصيل هنا تلقائياً..."></textarea>
             
-            <label style="font-size: 14px; font-weight: bold;">📢 نشر تعليمات وتنبيهات عاجلة تظهر لجميع الهواتف:</label>
-            <div class="input-group" style="margin-top: 5px; margin-bottom: 15px;">
-                <input type="text" id="announcement-text" placeholder="مثال: شباب برجاء الالتزام بالقوانين...">
-                <button onclick="uploadAnnouncement()" style="background-color: #17a2b8; height:45px;">نشر التنبيه</button>
-            </div>
-
-            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                <button onclick="clearServerAnnouncement()" style="background-color: #6c757d; font-size: 13px; padding: 8px;">حذف التنبيه الحالي</button>
-                <button onclick="clearServerChat()" style="background-color: #dc3545; font-size: 13px; padding: 8px;">🗑️ مسح الشات بالكامل</button>
-            </div>
-
-            <h4 style="margin-bottom: 5px; text-align: right; color: #555;">👥 قائمة المتواجدين النشطين:</h4>
-            <table>
-                <thead>
-                    <tr>
-                        <th>المستخدم</th>
-                        <th>وقت الانضمام</th>
-                        <th>التحكم</th>
-                    </tr>
-                </thead>
-                <tbody id="results-table-body"></tbody>
-            </table>
+            <button class="send-btn" onclick="sendToWhatsApp()">إرسال الرسالة إلى واتساب المشترك مباشرة 💬</button>
+            <button onclick="clearSelection()" style="background: #7f8c8d; color:white; width:100%; padding:8px; margin-top:10px; border:none; border-radius:4px; cursor:pointer;">تفريغ الخانة وإعادة الاختيار</button>
         </div>
     </div>
+</div>
 
-    <!-- مكتبات الفايربيز المدمجة بمشروعك الحالي -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+<script>
+    function checkCoachLogin() {
+        const pass = document.getElementById('coachPasswordInput').value;
+        if(pass === "2233") {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
+            initFirebase();
+        } else { alert("كلمة السر خاطئة!"); }
+    }
 
-    <script>
-        const firebaseConfig = { databaseURL: "https://kghk-82a53-default-rtdb.firebaseio.com" };
+    let database;
+    let currentPhone = "";
+    let currentName = "";
+
+    function initFirebase() {
+        const firebaseConfig = { databaseURL: "https://cort-6368a-default-rtdb.firebaseio.com" };
         firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
+        database = firebase.database();
 
-        let currentUserName = "";
-        let isOwner = false;
-        let isInitialLoad = true; 
-
-        // متغيرات التسجيل الصوتي
-        let mediaRecorder;
-        let audioChunks = [];
-        let isRecording = false;
-
-        window.onload = function() {
-            if ("Notification" in window) { Notification.requestPermission(); }
-            const savedName = localStorage.getItem("chat_username");
-            if (savedName) { executeLogin(savedName); } else { document.getElementById('login-screen').classList.remove('hidden'); }
-        };
-
-        function login() {
-            const name = document.getElementById('user-name').value.trim();
-            if(!name) return alert("برجاء إدخال الاسم أولاً للدخول!");
-            localStorage.setItem("chat_username", name);
-            executeLogin(name);
-        }
-
-        function executeLogin(name) {
-            if(name === "000") {
-                currentUserName = "المنشئ (المالك) ⭐";
-                isOwner = true;
-            } else {
-                currentUserName = name;
-                isOwner = false;
-            }
-
-            document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('main-dashboard').classList.remove('hidden');
-            
-            if(isOwner) {
-                document.getElementById('welcome-user-text').innerHTML = `مرحباً بك: <span style="color: #dc3545;">${currentUserName}</span>`;
-                document.getElementById('owner-panel').classList.remove('hidden');
-                document.getElementById('logout-btn').classList.add('hidden'); 
-            } else {
-                document.getElementById('welcome-user-text').innerText = `المستخدم: ${currentUserName}`;
-            }
-
-            const loginTime = new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
-            database.ref('myPrivateExam/submissions/' + currentUserName).set({ name: currentUserName, startTime: loginTime });
-
-            listenToMessages();
-            listenToAnnouncements();
-            if(isOwner) { loadActiveUsers(); }
-
-            document.getElementById('chat-message-input').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') sendMessage('text');
-            });
-        }
-
-        function logout() {
-            if(confirm("هل تريد الخروج وتغيير اسمك المسجل؟")) {
-                database.ref('myPrivateExam/submissions/' + currentUserName).remove();
-                localStorage.removeItem("chat_username");
-                location.reload();
-            }
-        }
-
-        // ---------- نظام الإرسال المتطور (نصوص + وسائط) ----------
-        function sendMessage(type, mediaData = "") {
-            const msgInput = document.getElementById('chat-message-input');
-            let text = "";
-
-            if (type === 'text') {
-                text = msgInput.value.trim();
-                if(!text) return;
-                msgInput.value = "";
-            } else {
-                text = mediaData; // البيانات المشفرة للملف
-            }
-
-            const time = new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
-
-            database.ref('myPrivateExam/currentExam/chatMessages').push({
-                sender: currentUserName,
-                messageText: text,
-                timeSent: time,
-                msgType: type, // نوع الرسالة: text, image, video, audio
-                role: isOwner ? 'admin' : 'user'
-            });
-        }
-
-        // معالجة رفع الصور والفيديو وتحويلها لنصوص مضغوطة
-        function handleMediaUpload(inputElement, type) {
-            const file = inputElement.files[0];
-            if (!file) return;
-
-            // تنبيه بحجم الملف
-            if (file.size > 10 * 1024 * 1024) { 
-                return alert("الملف كبير جداً! الحد الأقصى للملفات هو 10 ميجا بايت لتجنب البطء.");
-            }
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const base64Data = e.target.result;
-                sendMessage(type, base64Data);
-            };
-            reader.readAsDataURL(file);
-            inputElement.value = ""; // تفريغ المدخل للعمل مرة أخرى
-        }
-
-        // التحكم في المسجل الصوتي (Voice Note)
-        function toggleVoiceRecording() {
-            const voiceBtn = document.getElementById('voice-btn');
-            
-            if (!isRecording) {
-                // بدء التسجيل
-                navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
-                    mediaRecorder = new MediaRecorder(stream);
-                    audioChunks = [];
-                    
-                    mediaRecorder.ondataavailable = event => { audioChunks.push(event.data); };
-                    
-                    mediaRecorder.onstop = () => {
-                        const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
-                        const reader = new FileReader();
-                        reader.onloadend = function() {
-                            sendMessage('audio', reader.result);
-                        };
-                        reader.readAsDataURL(audioBlob);
-                        
-                        // إغلاق المايكروفون بعد الانتهاء
-                        stream.getTracks().forEach(track => track.stop());
-                    };
-
-                    mediaRecorder.start();
-                    isRecording = true;
-                    voiceBtn.innerText = "🛑 تسجيل... اضغط للإرسال";
-                    voiceBtn.classList.add('recording');
-                }).catch(err => {
-                    alert("برجاء إعطاء صلاحية الوصول للمايكروفون لتسجيل الصوت.");
-                });
-            } else {
-                // إيقاف التسجيل والإرسال تلقائياً
-                mediaRecorder.stop();
-                isRecording = false;
-                voiceBtn.innerText = "🎙️ تسجيل صوتي";
-                voiceBtn.classList.remove('recording');
-            }
-        }
-
-        function listenToMessages() {
-            database.ref('myPrivateExam/currentExam/chatMessages').limitToLast(1).on('child_added', (childSnapshot) => {
-                if (isInitialLoad) return;
+        database.ref('clients').on('value', (snapshot) => {
+            let coachHtml = '';
+            snapshot.forEach((childSnapshot) => {
                 const data = childSnapshot.val();
-                if (data.sender !== currentUserName && document.hidden) {
-                    let notificationBody = data.msgType === 'text' ? data.messageText : `أرسل لك ${getMediaTypeAr(data.msgType)}`;
-                    sendPushNotification(data.sender, notificationBody);
-                }
+                coachHtml += `<div class="client-box" onclick="selectClient('${data.name}', '${data.phone}')">👤 ${data.name}</div>`;
             });
+            document.getElementById('coachClients').innerHTML = coachHtml || 'لا يوجد مشتركين حالياً بالسيستم.';
+        });
 
-            database.ref('myPrivateExam/currentExam/chatMessages').on('value', (snapshot) => {
-                const msgBox = document.getElementById('messages-box');
-                msgBox.innerHTML = ""; 
-
-                if(snapshot.exists()) {
-                    snapshot.forEach((childSnapshot) => {
-                        const msgId = childSnapshot.key;
-                        const data = childSnapshot.val();
-
-                        let packetClass = "msg-packet";
-                        if(data.role === 'admin') packetClass = "msg-packet admin-packet";
-
-                        let deleteBtnHtml = "";
-                        if(isOwner) {
-                            deleteBtnHtml = `<button class="delete-btn" onclick="deleteMessage('${msgId}')">❌ حذف</button>`;
-                        }
-
-                        // تخصيص طريقة العرض بناءً على نوع الرسالة المرفوعة
-                        let contentHtml = "";
-                        if (!data.msgType || data.msgType === 'text') {
-                            contentHtml = `<span>${data.messageText}</span>`;
-                        } else if (data.msgType === 'image') {
-                            contentHtml = `<img src="${data.messageText}" alt="صورة مرفوعة" onclick="window.open(this.src)">`;
-                        } else if (data.msgType === 'video') {
-                            contentHtml = `<video src="${data.messageText}" controls></video>`;
-                        } else if (data.msgType === 'audio') {
-                            contentHtml = `<audio src="${data.messageText}" controls></audio>`;
-                        }
-
-                        msgBox.innerHTML += `
-                            <div class="${packetClass}">
-                                <div class="msg-meta"><b>${data.sender}</b> في ${data.timeSent} ${deleteBtnHtml}</div>
-                                <div class="msg-bubble">${contentHtml}</div>
-                            </div>
-                        `;
-                    });
-                    msgBox.scrollTop = msgBox.scrollHeight;
-                } else {
-                    msgBox.innerHTML = `<p style="text-align: center; color: #888; font-size: 13px;">لا توجد رسائل في الجروب حالياً. ابدأ المحادثة الآن!</p>`;
-                }
-                isInitialLoad = false;
+        database.ref('messages').on('value', (snapshot) => {
+            let coachHtml = '';
+            snapshot.forEach((childSnapshot) => {
+                const data = childSnapshot.val();
+                // يظهر هنا اسم الزر المخصص فقط (title) مثل "عمر" وعند الضغط ينزل الـ (content)
+                coachHtml += `<button class="msg-btn" onclick="appendToMessage(\`${data.content}\`)"><span>[${data.category}]</span> ${data.title}</button>`;
             });
+            document.getElementById('coachMessages').innerHTML = coachHtml || 'لا يوجد خانات جاهزة حالياً.';
+        });
+    }
+
+    function selectClient(name, phone) {
+        currentName = name;
+        currentPhone = phone;
+        document.getElementById('selectedClientName').innerText = name;
+        document.getElementById('selectedClientPhone').innerText = "0" + phone.substring(1);
+    }
+
+    function appendToMessage(text) {
+        const textarea = document.getElementById('finalMessage');
+        if(textarea.value === "") {
+            textarea.value = text;
+        } else {
+            textarea.value = textarea.value + "\n\n" + text;
+        }
+    }
+
+    function clearSelection() {
+        document.getElementById('finalMessage').value = "";
+        document.getElementById('selectedClientName').innerText = "لم يتم اختيار أحد";
+        document.getElementById('selectedClientPhone').innerText = "-";
+        currentName = "";
+        currentPhone = "";
+    }
+
+    function sendToWhatsApp() {
+        const message = document.getElementById('finalMessage').value;
+        if(!currentPhone) {
+            alert("برجاء اختيار المشترك أولاً بالضغط على اسمه!");
+            return;
+        }
+        if(!message) {
+            alert("برجاء الضغط على أزرار الرسائل لتجهيز النص أولاً!");
+            return;
         }
 
-        function getMediaTypeAr(type) {
-            if(type === 'image') return "صورة 🖼️";
-            if(type === 'video') return "فيديو 🎥";
-            if(type === 'audio') return "تسجيل صوتي 🎙️";
-            return "ملف";
-        }
-
-        function sendPushNotification(sender, text) {
-            if ("Notification" in window && Notification.permission === "granted") {
-                const options = {
-                    body: text,
-                    icon: 'https://cdn-icons-png.flaticon.com/512/134/134914.png',
-                    vibrate: [200, 100, 200]
-                };
-                const notification = new Notification(`رسالة جديدة من: ${sender}`, options);
-                notification.onclick = function() { window.focus(); this.close(); };
-            }
-        }
-
-        function deleteMessage(msgId) {
-            if(confirm("هل أنت متأكد من رغبتك في حذف هذه الرسالة نهائياً؟")) {
-                database.ref('myPrivateExam/currentExam/chatMessages/' + msgId).remove();
-            }
-        }
-
-        function clearServerChat() {
-            if(confirm("🚨 هل أنت متأكد من مسح شات الجروب بالكامل؟")) {
-                database.ref('myPrivateExam/currentExam/chatMessages').remove();
-            }
-        }
-
-        // ---------- التنبيهات والتعليمات المباشرة ----------
-        function uploadAnnouncement() {
-            const text = document.getElementById('announcement-text').value.trim();
-            if(!text) return alert("اكتب نص التنبيه أولاً!");
-            database.ref('myPrivateExam/announcement').set(text).then(() => {
-                alert("تم نشر التنبيه بنجاح!");
-                document.getElementById('announcement-text').value = "";
-            });
-        }
-
-        function clearServerAnnouncement() {
-            database.ref('myPrivateExam/announcement').remove().then(() => alert("تم إزالة التنبيه."));
-        }
-
-        function listenToAnnouncements() {
-            database.ref('myPrivateExam/announcement').on('value', (snapshot) => {
-                const box = document.getElementById('announcement-box');
-                if(snapshot.exists() && snapshot.val() !== "") {
-                    box.style.display = "block";
-                    box.innerText = "📢 تعليمات من المالك: " + snapshot.val();
-                } else {
-                    box.style.display = "none";
-                }
-            });
-        }
-
-        // ---------- قائمة المتواجدين (للمالك) ----------
-        function loadActiveUsers() {
-            database.ref('myPrivateExam/submissions').on('value', (snapshot) => {
-                const data = snapshot.val();
-                const tbody = document.getElementById('results-table-body');
-                tbody.innerHTML = "";
-                if(data) {
-                    for(let id in data) {
-                        let user = data[id];
-                        if(user.name === "المنشئ (المالك) ⭐") continue;
-
-                        tbody.innerHTML += `<tr>
-                            <td><b>${user.name}</b></td>
-                            <td style="color: green;">${user.startTime || '--'}</td>
-                            <td><button onclick="kickUser('${user.name}')" style="background-color:#dc3545; padding: 4px 8px; margin:0; font-size:12px; width:auto;">طرد 🚫</button></td>
-                        </tr>`;
-                    }
-                } else {
-                    tbody.innerHTML = `<tr><td colspan="3">لا يوجد مستخدمين نشطين حالياً.</td></tr>`;
-                }
-            });
-        }
-
-        function kickUser(targetName) {
-            if(confirm(`هل تريد طرد وإزالة المستخدم ${targetName}؟`)) {
-                database.ref('myPrivateExam/submissions/' + targetName).remove();
-            }
-        }
-    </script>
+        const encodedMessage = encodeURIComponent(message);
+        const whatsappUrl = `https://api.whatsapp.com/send?phone=${currentPhone}&text=${encodedMessage}`;
+        window.open(whatsappUrl, '_blank');
+    }
+</script>
 </body>
 </html>
- 
